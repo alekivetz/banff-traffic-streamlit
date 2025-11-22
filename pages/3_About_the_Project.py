@@ -40,7 +40,7 @@ def main():
       of congestion and predicts route-specific delays.  
     - **Traffic Analysis** – An interactive visualization page for exploring historical 
       route data, delay distributions, and seasonal trends.  
-    - **ℹAbout the Project** – A reference page explaining the data sources, methodology, and team behind the app.
+    - **About the Project** – A reference page explaining the data sources, methodology, and team behind the app.
     """)
 
     # --- Technical Overview ---
