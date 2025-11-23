@@ -56,7 +56,7 @@ def fetch_classifier():
         model = joblib.load(io.BytesIO(model_bytes))
         return model
     except Exception as e:
-        st.errir(f'Failed top load classifier from Drive ({e}).')
+        st.error(f'Failed top load classifier from Drive ({e}).')
         raise
 
 
