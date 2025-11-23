@@ -1,5 +1,12 @@
 import streamlit as st
+from google.oauth2 import service_account
 from utils.display_images import display_banner
+
+creds = service_account.Credentials.from_service_account_info(
+    dict(st.secrets["gcp_service_account"]),
+    scopes=["https://www.googleapis.com/auth/drive.readonly"]
+)
+st.success("✅ Google service account loaded successfully!")
 
 def main():
     st.set_page_config(
