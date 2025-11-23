@@ -1,71 +1,103 @@
 import streamlit as st
 import pandas as pd
 import joblib
-from datetime import datetime
 import io
 import requests
 import json
+from datetime import datetime
+
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from google.oauth2 import service_account
 
 from utils.display_images import display_image, display_banner
 from utils.route_info import ROUTE_DESCRIPTIONS
 
+# --- Connect to Google Drive ---
+def connect_drive():
+    """Authenticate with Google Drive using the service account."""
+    creds = service_account.Credentials.from_service_account_info(
+        dict(st.secrets['gcp_service_account']),
+        scopes=['https://www.googleapis.com/auth/drive.readonly']
+    )
+    return build('drive', 'v3', credentials=creds)
+
+def download_from_drive(file_id):
+    """Download a file from Google Drive."""
+    drive = connect_drive()
+    request = drive.files().get_media(fileId=file_id)
+    buffer = io.BytesIO()
+    downloader = MediaIoBaseDownload(buffer, request)
+    done = False
+    while not done:
+        status, done = downloader.next_chunk()
+    buffer.seek(0)
+    return buffer.read()
+
 # --- Load models and data ---
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_parquet_from_drive():
+    """Download and cache the Parquet data file from Google Drive."""
+    file_id = st.secrets['ROUTES_WITH_LAGS_ID']
+    try:
+        data_bytes = download_from_drive(file_id)
+        return pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
+    except Exception as e:
+        st.warning(f'Could not load from Google Drive ({e}). Loading local copy instead.')
+        return pd.read_parquet('data/routes_with_lags.parquet', engine='fastparquet')
+    
+
 @st.cache_resource(show_spinner=False)
 def fetch_classifier():
-    """Download and cache the classifier model."""
-    url = st.secrets['CLASSIFIER_MODEL']  # must end with ?dl=1
-    response = requests.get(url, stream=True, timeout=60)
-    response.raise_for_status()
-    return joblib.load(io.BytesIO(response.content))
+    """Download and cache the classifier model from Drive."""   
+    file_id = st.secrets['CLASSIFIER_MODEL_ID']
+    try:
+        model_bytes = download_from_drive(file_id)
+        model = joblib.load(io.BytesIO(model_bytes))
+        return model
+    except Exception as e:
+        st.errir(f'Failed top load classifier from Drive ({e}).')
+        raise
 
-# --- Regressors ---
+
 @st.cache_resource(show_spinner=False)
 def fetch_regressors():
-    """Download and cache all per-route models."""
-    route_dict = json.loads(st.secrets['ROUTE_MODELS'])
+    """Download and cache all per-route models from Drive."""
+    route_dict = json.loads(st.secrets['ROUTE_MODELS_IDS'])
     models = {}
-    for route, url in route_dict.items():
+    for route, file_id in route_dict.items():
         try:
-            r = requests.get(url, stream=True, timeout=60)
-            r.raise_for_status()
-            models[route] = joblib.load(io.BytesIO(r.content))
+            model_bytes = download_from_drive(file_id)
+            models[route] = joblib.load(io.BytesIO(model_bytes))
         except Exception as e:
-            st.warning(f'⚠️ Could not load model for {route}: {e}')
+            st.warning(f'Could not load model for {route}: {e}')
     return models
 
-# --- Load Once Per Session ---
+
 def get_models():
-    if 'classifier' not in st.session_state:
+    """Load classifier and regressors once per session."""  
+    if 'classifier' not in st.session_state:    
         with st.spinner('Loading models...'):
             st.session_state.classifier = fetch_classifier()
             st.session_state.regressors = fetch_regressors()
     return st.session_state.classifier, st.session_state.regressors
 
-@st.cache_data(ttl=86400, show_spinner=False)
-def fetch_parquet_from_dropbox():
-    """Download and cache the Parquet file for 24 hours."""
-    url = st.secrets['ROUTES_WITH_LAGS']  # must end with ?dl=1
-    try:
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
-        return pd.read_parquet(io.BytesIO(response.content))
-    except Exception as e:
-        st.warning(f'Could not load from Dropbox ({e}). Loading local copy instead.')
-        return pd.read_parquet('data/routes_with_lags.parquet')
-
 
 def load_data():
     """Load the data once per session (avoid refetching on widget changes)."""
-    if 'df' not in st.session_state:
+    if 'routes_df' not in st.session_state:
         with st.spinner('Loading dataset...'):
-            df = fetch_parquet_from_dropbox()
+            df = fetch_parquet_from_drive()
             if 'timestamp' in df.columns and df['timestamp'].dtype == 'object':
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-            st.session_state.df = df
-    return st.session_state.df
+            st.session_state.routes_df = df
+    return st.session_state.routes_df
+
 
 clf, regressors = get_models()
 df = load_data()
+
+st.success('Models and data loaded successfully.')
 
 # --- UI Setup ---
 st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')
