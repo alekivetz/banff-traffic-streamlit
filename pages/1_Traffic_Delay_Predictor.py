@@ -169,6 +169,8 @@ if st.button('Predict Delay'):
                 st.success(f'Predicted Delay: {pred:.2f} minutes')
 
 st.markdown('---')
-st.caption('Data Source: Banff Traffic Management Project (2025)')
-st.caption('Created by Alpine Analysts · NorQuest College MLAD · Fall 2025')
+st.caption("""
+    Data Source: Banff Traffic Management Project (2025)
+    Created by Alpine Analysts · NorQuest College MLAD · Fall 2025
+""")
 
