@@ -157,14 +157,13 @@ st.plotly_chart(fig5, width='stretch')
 st.markdown('---')
 st.subheader('6. Explainable AI: Diagnostics and Feature Insights')
 
-
-st.markdown('**Residual-style Diagnostic Plot**')
 # approximate residual = expected base delay vs actual
-filtered_df['expected_delay'] = base_delay + np.random.normal(0, 1, len(filtered_df))
-filtered_df['residual'] = filtered_df['actual delay (mins)'] - filtered_df['expected_delay']
+df_xai = filtered_df.copy()
+df_xai.loc[:, 'expected_delay'] = base_delay + np.random.normal(0, 1, len(df_xai))
+df_xai.loc[:, 'residual'] = df_xai['actual delay (mins)'] - df_xai['expected_delay']
 
 fig_resid = px.scatter(
-    filtered_df, x='expected_delay', y='residual', color='route',
+    df_xai, x='expected_delay', y='residual', color='route',
     title='Residual-style Plot (Actual - Expected Delay)',
     labels={'expected_delay': 'Expected Delay (minutes)', 'residual': 'Residual (minutes)'},
     opacity=0.7
