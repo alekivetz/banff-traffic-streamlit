@@ -81,10 +81,10 @@ def main():
     # --- Team Members ---
     st.subheader('Team Alpine Analysts')
     st.write("""
-    - **Angela Lekivetz**  
-    - **Christine Joyce Moraleja**
-    - **Victoriia Biaragova**
-    - **Sirjana Chauhan**
+    - **Angela Lekivetz** – Data Analysis · Model Development · Streamlit Integration
+    - **Christine Joyce Moraleja** – Data Cleaning · Documentation · Project Coordination
+    - **Victoriia Biaragova** – Model Development · Feature Engineering · Dashboard Design
+    - **Sirjana Chauhan** – Model Evaluation · Visualization · Testing
     """)
 
     # --- Acknowledgment ---
