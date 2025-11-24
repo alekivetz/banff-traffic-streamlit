@@ -65,7 +65,7 @@ def main():
     The Banff Traffic Management System combines predictive modeling with interactive visualization.  
     It was developed entirely in **Python**, using:
 
-    - **Machine Learning:** scikit-learn, XGBoost  
+    - **Machine Learning:** scikit-learn, XGBoost, Random Forest Regressor 
     - **Data Processing:** pandas, NumPy  
     - **Visualization:** Plotly, Streamlit  
     - **Data Storage:** Google Drive (private data hosting)  
