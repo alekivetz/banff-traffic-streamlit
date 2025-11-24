@@ -72,15 +72,14 @@ def fetch_regressors():
 
             # Detect and load models
             if model_bytes.strip().startswith(b'{"learner"'):
-                buffer = io.BytesIO(model_bytes)
-                model = xgb.Booster()   
-                model.load_model(buffer)
+                model = xgb.Booster()
+                model.load_model(bytearray(model_bytes))
                 models[route] = model
-                st.info(f'Loaded XGBoost model for {route}.')
+                
             else:
                 model = joblib.load(io.BytesIO(model_bytes))
                 models[route] = model
-                st.info(f'Loaded Random Forest model for {route}.')
+
         except Exception as e:
             st.warning(f'Could not load model for {route}: {e}')
     return models
