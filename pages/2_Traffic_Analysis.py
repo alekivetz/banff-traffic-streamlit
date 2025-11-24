@@ -153,5 +153,10 @@ fig5 = px.bar(monthly_avg, x='month', y='actual delay (mins)', color='route', ba
               labels={'month': 'Month', 'actual delay (mins)': 'Average Delay (minutes)'})
 st.plotly_chart(fig5, width='stretch')
 
+# --- Footer ---
 st.markdown('---')
-st.caption('Created by Alpine Analysts · NorQuest College MLAD · Fall 2025')
+st.caption("""
+    Data Source: Banff Traffic Management Project (2025)
+           
+    Created by Alpine Analysts · NorQuest College MLAD · Fall 2025
+""")

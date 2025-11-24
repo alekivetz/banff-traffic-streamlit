@@ -93,7 +93,7 @@ display_banner()
 st.title('Banff Traffic Delay Predictor')
 st.write("""
     Welcome to the **Banff Traffic Delay Predictor**, an interactive dashboard that leverages machine learning 
-    to **analyze and forecast traffic delays** across Banff National Park.  
+    to **analyze and forecast traffic delays** within the town of Banff.
 """)
 
 st.subheader('Model Overview')

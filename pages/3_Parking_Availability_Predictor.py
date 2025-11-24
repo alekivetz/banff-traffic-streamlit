@@ -34,7 +34,7 @@ display_banner()
 st.title('Parking Availability Predictor - 60 Minute Forecast')
 st.write("""
 This interactive dashboard uses a machine learning model to **forecast parking occupancy 60 minutes ahead** 
-for various lots in Banff National Park, helping visitors and planners manage congestion more effectively.
+for various lots in the town of Banff, helping visitors and planners manage congestion more effectively.
 """)
 st.markdown('---')  
 
@@ -91,6 +91,7 @@ else:
 
 st.caption('Forecasts generated using an XGBoost regression model trained on 15-minute occupancy intervals.')
 
+# --- Footer ---
 st.markdown('---')
 st.caption("""
     Data Source: Banff Traffic Management Project (2025)
