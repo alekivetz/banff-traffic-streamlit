@@ -16,8 +16,11 @@ def main():
     st.write("""
     The **Banff Traffic Management** project was developed by **Team Alpine Analysts** 
     as part of the Machine Learning Analyst Diploma program at NorQuest College (Fall 2025).  
-    This initiative explores how machine learning can support smarter transportation planning 
-    within Banff National Park by predicting both **traffic congestion** and **parking availability**.
+    The project applies **machine learning and data visualization** to analyze and forecast **traffic congestion** 
+    and **parking availability** across the town of Banff.
+
+    The system integrates multiple predictive and analytical modules into a single Streamlit interface, 
+    transforming real transportation data into actionable insights for smarter mobility management.
     """)
 
     st.markdown('---')
@@ -29,54 +32,70 @@ def main():
     As traffic volumes increase, congestion at key routes and entrances has become a significant challenge 
     for both travelers and park management.  
              
-    The goal of this initiative is to create a **decision-support tool** that helps stakeholders 
-    monitor, visualize, and forecast traffic conditions to improve visitor flow and reduce bottlenecks.
+    The goal of this project is to create a **decision-support platform** that helps stakeholders:
+    - Monitor and forecast real-time route conditions.  
+    - Anticipate congestion patterns before they occur.  
+    - Analyze parking demand, usage, and revenue trends.  
+    - Support sustainable mobility through data-driven insights.
     """)
+
+    st.markdown('---')
 
     # --- Application Overview ---
     st.subheader('Application Overview')
     st.write("""
     The interactive dashboard now consists of **four integrated components**, each designed 
     to address a different aspect of Banff’s mobility system:
-    
-    - **Traffic Delay Predictor** – A machine learning–powered module that estimates overall 
-      congestion risk and predicts per-route delay durations.  
-    - **Traffic Analysis** – An interactive data visualization page for exploring 
-      route performance, speed trends, and seasonal delay patterns.  
-    - **Parking Availability Predictor** – A predictive model that estimates **lot occupancy 60 minutes ahead**, 
-      helping to anticipate demand and prevent overcrowding.  
-    - **Parking Analysis** – A detailed analytical dashboard providing insights into 
-      **sessions, revenue, payment methods, and duration trends** across all parking units.  
     """)
+
+    st.markdown("""
+    | Page | Description |
+    |------|-------------|
+    | **1. Traffic Delay Predictor** | Machine learning–powered model that estimates congestion probability and predicts per-route delay durations. |
+    | **2. Traffic Analysis Dashboard** | Interactive visualizations of historical speed and delay trends across Banff’s main routes. |
+    | **3. Parking Availability Predictor** | Predicts parking lot occupancy 60 minutes into the future using an XGBoost regression model trained on 15-minute intervals. |
+    | **4. Parking Analysis Dashboard** | Aggregates parking session data to visualize sessions, revenue, duration, and demand by time and location. |
+    """)
+
+    st.markdown('---')
 
     # --- Technical Overview ---
     st.subheader('Technical Overview')
     st.write("""
-    The Banff Traffic Management system integrates several predictive and analytical components 
-    developed using **Python**, **pandas**, **scikit-learn**, **XGBoost**, and **Streamlit**.  
-    Each model focuses on a specific aspect of transportation management:
+    The Banff Traffic Management System combines predictive modeling with interactive visualization.  
+    It was developed entirely in **Python**, using:
 
-    • **Traffic Delay Models** – Predict both the probability of congestion and the expected delay duration 
-      for each monitored route. These models incorporate temporal patterns, rolling averages, and historical 
-      traffic metrics to deliver accurate short-term forecasts.
-
-    • **Parking Occupancy Forecast** – Uses a regression-based XGBoost model trained on 15-minute interval data 
-      to estimate lot occupancy one hour into the future.  
-
-    All models were integrated into a single Streamlit application that provides interactive filtering, 
-    live forecasting, and data visualizations.
+    - **Machine Learning:** scikit-learn, XGBoost  
+    - **Data Processing:** pandas, NumPy  
+    - **Visualization:** Plotly, Streamlit  
+    - **Data Storage:** Google Drive (private data hosting)  
+    - **Deployment:** Streamlit Cloud  
     """)
+
+    st.write("""
+    **Core Models:**
+    - **Delay Risk Classifier** – Predicts whether a route will experience *no delay*, *minor delay*, or *major congestion*.  
+    - **Per-Route Delay Regressor** – Forecasts the expected delay duration (minutes) per route using temporal and lag-based features.  
+    - **Parking Occupancy Forecaster** – Uses a regression-based XGBoost model to predict 60-minute-ahead lot occupancy.
+    """)
+
+    st.markdown('---')
 
     # --- Workflow ---
     st.subheader('Machine Learning Workflow')
     st.write("""
-    The project followed the **CRISP-DM** process:
-    1. **Data Understanding:** Examined over a year of traffic data from multiple Banff routes.  
-    2. **Data Preparation:** Cleaned, merged, and feature-engineered temporal and rolling statistics.  
-    3. **Modeling:** Trained and evaluated Random Forest and XGBoost models per route.  
-    4. **Evaluation:** Compared metrics using Mean Absolute Error (MAE) and R² to assess accuracy.  
-    5. **Deployment:** Integrated the final models into an interactive Streamlit application.
+    The project followed the **CRISP-DM** methodology:
+
+    1. **Data Understanding** – Explored over a year of traffic and parking data from Banff National Park.  
+    2. **Data Preparation** – Cleaned and merged datasets, engineered lag and rolling-window features, and derived temporal variables.  
+    3. **Modeling** –  
+       • *Traffic Models:* Random Forest and XGBoost regressors for route-specific delays and congestion levels.  
+       • *Parking Models:* XGBoost regressors to forecast occupancy based on recent usage trends.  
+    4. **Evaluation** – Measured performance using MAE, RMSE, and R² for regression; precision and recall for classification.  
+    5. **Deployment** – Integrated all models into a unified Streamlit dashboard for real-time prediction and visualization.
     """)
+
+    st.markdown('---')
 
     # --- Team Members ---
     st.subheader('Team Alpine Analysts')
