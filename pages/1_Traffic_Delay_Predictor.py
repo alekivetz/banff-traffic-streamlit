@@ -69,13 +69,18 @@ def fetch_regressors():
     for route, file_id in route_dict.items():
         try:
             model_bytes = download_from_drive(file_id)
-            if file_id.endswith('.json'):
+
+            # Detect and load models
+            if model_bytes.strip().startswith(b'{"learner"'):
                 buffer = io.BytesIO(model_bytes)
                 model = xgb.Booster()   
                 model.load_model(buffer)
+                models[route] = model
+                st.info(f'Loaded XGBoost model for {route}.')
             else:
                 model = joblib.load(io.BytesIO(model_bytes))
-            models[route] = joblib.load(io.BytesIO(model_bytes))
+                models[route] = model
+                st.info(f'Loaded Random Forest model for {route}.')
         except Exception as e:
             st.warning(f'Could not load model for {route}: {e}')
     return models
