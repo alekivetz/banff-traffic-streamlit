@@ -78,7 +78,7 @@ The project followed the **CRISP-DM** methodology for both traffic and parking f
 | Category | Tools |
 |-----------|-------|
 | **Languages** | Python |
-| **Libraries** | pandas, scikit-learn, XGBoost, Plotly, Streamlit |
+| **Libraries** | pandas, scikit-learn, XGBoost, Random Forest, Plotly, Streamlit |
 | **Data Storage** | Google Drive (secure private access) |
 | **Deployment** | Streamlit Cloud |
 | **Visualization** | Streamlit, Plotly Express |
