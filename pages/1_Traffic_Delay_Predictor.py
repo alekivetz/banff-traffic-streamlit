@@ -2,10 +2,12 @@ import streamlit as st
 import pandas as pd
 import joblib
 import io
-import requests
 import json
 from datetime import datetime
 import xgboost as xgb
+import shap
+import matplotlib.pyplot as plt
+import numpy as np
 
 from utils.display_images import display_image, display_banner
 from utils.route_info import ROUTE_DESCRIPTIONS
@@ -80,6 +82,31 @@ def load_data():
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
             st.session_state.routes_df = df
     return st.session_state.routes_df
+
+# --- XAI ---
+
+def explain_prediction_with_shap(model, X_sample):
+    """
+    Generate SHAP explanations for a single sample.
+    Works with tree-based regressors (RandomForest, XGBoost).
+    """
+
+    explainer = shap.Explainer(model)
+    shap_values = explainer(X_sample)
+
+    # Summary plot (global feature importance)
+    st.subheader('Feature Contribution Summary (SHAP)')
+    fig_summary, ax = plt.subplots(figsize=(8, 5))
+    shap.summary_plot(shap_values, X_sample, show=False)
+    st.pyplot(fig_summary)
+    plt.clf()
+
+    # Local force plot for individual explanation
+    st.subheader('Individual Prediction Explanation')
+    shap_html = shap.force_plot(
+        explainer.expected_value, shap_values.values[0, :], X_sample.iloc[0, :], matplotlib=False
+    )
+    st.components.v1.html(shap.getjs() + shap_html.html(), height=220)
 
 
 clf, regressors = get_models()
@@ -167,8 +194,6 @@ if st.button('Predict Delay'):
     # --- Right: Regressor ---
     with col2:
         st.header('Route-Specific Delay (Regressor)')
-
-        dt = datetime.combine(date_input, time_input)
         route_df = df[df['route'] == route].copy().sort_values('timestamp')
         route_df = route_df[route_df['timestamp'] <= dt]
 
@@ -181,10 +206,34 @@ if st.button('Predict Delay'):
             if regressor is None:
                 st.error(f'No trained model found for {route}.')
             else:
-                X_new = pd.DataFrame([closest_row])[regressor.feature_names_in_]
-                pred = regressor.predict(X_new)[0]
+                # --- Safely handle both sklearn and XGBoost Booster models ---
+                if hasattr(regressor, 'feature_names_in_'):
+                    feature_names = regressor.feature_names_in_
+                elif hasattr(regressor, 'feature_names'):
+                    feature_names = regressor.feature_names
+                else:
+                    # Fallback if model lacks stored feature names
+                    feature_names = [col for col in closest_row.index if col != 'timestamp']
+
+                X_new = pd.DataFrame([closest_row])[feature_names]
+
+                # --- Predict depending on model type ---
+                if isinstance(regressor, xgb.Booster):
+                    dmatrix = xgb.DMatrix(X_new)
+                    pred = regressor.predict(dmatrix)[0]
+                else:
+                    pred = regressor.predict(X_new)[0]
 
                 st.success(f'Predicted Delay: {pred:.2f} minutes')
+
+                # --- XAI Explainability Section ---
+                st.markdown('### Model Explainability')
+                with st.expander('View Why the Model Predicted This Delay', expanded=False):
+                    try:
+                        explain_prediction_with_shap(regressor, X_new)
+                    except Exception as e:
+                        st.warning(f'Unable to generate SHAP explanation: {e}')
+
 
 st.markdown('---')
 st.caption("""
