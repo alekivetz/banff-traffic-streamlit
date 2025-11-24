@@ -75,7 +75,7 @@ def fetch_regressors():
                 model = xgb.Booster()
                 model.load_model(bytearray(model_bytes))
                 models[route] = model
-                
+
             else:
                 model = joblib.load(io.BytesIO(model_bytes))
                 models[route] = model
@@ -214,6 +214,7 @@ if st.button('Predict Delay'):
 st.markdown('---')
 st.caption("""
     Data Source: Banff Traffic Management Project (2025)
+           
     Created by Alpine Analysts · NorQuest College MLAD · Fall 2025
 """)
 
