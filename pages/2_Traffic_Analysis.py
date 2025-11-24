@@ -7,6 +7,7 @@ import io
 import requests
 
 from utils.display_images import display_banner
+from utils.google_drive_helpers import download_from_drive
 
 # --- Page Config ---
 st.set_page_config(page_title='Banff Traffic Analysis', page_icon='📈', layout='wide')
@@ -57,27 +58,27 @@ st.markdown('---')
 # --- Load Data ---
 @st.cache_data(ttl=86400, show_spinner=False)
 def fetch_routes_vis():
-    """Download routes visualization data from Dropbox (cached 24h)."""
+    """Download routes visualization data Google Drive."""
     try:
-        url = st.secrets['ROUTES_VIS_CSV']  # should end with ?dl=1
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
-        df = pd.read_csv(io.StringIO(response.text))
+        file_id = st.secrets['ROUTES_VIS_ID']
+        data_bytes = download_from_drive(file_id)
+        df = pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
+
+        # --- Parse and clean ---
+        df['calculation time'] = pd.to_datetime(df['calculation time'], errors='coerce')
+        df = df.dropna(subset=['calculation time'])
+        df['route'] = df['route'].astype(str)
+
+        # --- Derive temporal features ---
+        df['hour'] = df['calculation time'].dt.hour
+        df['day_of_week'] = df['calculation time'].dt.day_name()
+        df['month'] = df['calculation time'].dt.strftime('%B')
+
+        return df
+    
     except Exception as e:
-        st.warning(f'Could not load from Dropbox ({e}). Loading local copy instead.')
-        df = pd.read_csv('data/cleaned_routes.csv')
-
-    # --- Parse and clean ---
-    df['calculation time'] = pd.to_datetime(df['calculation time'], errors='coerce')
-    df = df.dropna(subset=['calculation time'])
-    df['route'] = df['route'].astype(str)
-
-    # --- Derive temporal features ---
-    df['hour'] = df['calculation time'].dt.hour
-    df['day_of_week'] = df['calculation time'].dt.day_name()
-    df['month'] = df['calculation time'].dt.strftime('%B')
-
-    return df
+        st.warning(f'Could not load from Google Drive ({e})')
+        return pd.DataFrame()
 
 
 def get_routes_vis():
