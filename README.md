@@ -1,8 +1,5 @@
 # 🚗 Banff Traffic Management System
 
-**Developed by Team Alpine Analysts**  
-*NorQuest College – Machine Learning Analyst Diploma (Fall 2025)*
-
 ---
 
 ## Project Overview
@@ -57,7 +54,6 @@ It was developed entirely in **Python**, using:
 - **Delay Risk Classifier** – Predicts whether a route will experience *no delay*, *minor delay*, or *major congestion*.
 - **Per-Route Delay Regressor** – Forecasts the expected delay duration (in minutes) per route using temporal and lag-based features.
 - **Parking Occupancy Forecaster** – Uses a regression-based XGBoost model to predict 60-minute-ahead lot occupancy.
-- **Parking Analytics Module** – Aggregates session-level data for descriptive insights into parking trends, revenue, and duration.
 
 All models and dashboards are integrated into one unified **Streamlit application** providing dynamic visualization, caching, and seamless navigation.
 
