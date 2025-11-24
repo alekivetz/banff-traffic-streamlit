@@ -85,8 +85,6 @@ def load_data():
 clf, regressors = get_models()
 df = load_data()
 
-st.success('Models and data loaded successfully.')
-
 # --- UI Setup ---
 st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')
 display_banner()
