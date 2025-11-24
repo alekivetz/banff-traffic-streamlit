@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import joblib
 import io
+import shap
+import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
 from utils.google_drive_helpers import download_from_drive
@@ -95,6 +97,36 @@ else:
     st.success('🟢 Spaces should be available in 60 minutes.')
 
 st.caption('Forecasts generated using an XGBoost regression model trained on 15-minute occupancy intervals.')
+
+# --- XAI Section ---
+st.markdown('---')
+st.subheader('Model Explainability')
+with st.expander('View Why the Model Predicted This Lot', expanded=False):
+    st.write('Forecasts are generated using an XGBoost regression model trained on 15-minute occupancy intervals.')
+
+    try:
+        explainer = shap.Explainer(model)
+        shap_values = explainer(X_current)
+
+        # Feature importance summary
+        st.markdown('**Global Feature Importance (SHAP Summary)**')
+        fig_sum, ax = plt.subplots(figsize=(8, 5))
+        shap.summary_plot(shap_values, X_current, show=False)
+        st.pyplot(fig_sum)
+        plt.clf()
+
+        # Local explanation for this single prediction
+        st.markdown('**Local Explanation for Selected Parking Lot**')
+        shap_html = shap.force_plot(
+            explainer.expected_value,
+            shap_values.values[0, :],
+            X_current.iloc[0, :],
+            matplotlib=False
+        )
+        st.components.v1.html(shap.getjs() + shap_html.html(), height=220)
+
+    except Exception as e:
+        st.warning(f'Could not generate SHAP explanations ({e}).')
 
 # --- Footer ---
 st.markdown('---')

@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import io
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 from utils.display_images import display_banner
 from utils.google_drive_helpers import download_from_drive
 
