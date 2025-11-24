@@ -34,8 +34,7 @@ def main():
 
     st.info("""
     Use the **sidebar** to navigate between pages.  
-    Each section provides insights into a different aspect of Banff’s transportation ecosystem — 
-    combining real-world data, predictive modeling, and interactive visualization.
+    Each section provides insights into a different aspect of Banff’s transportation ecosystem, combining real-world data, predictive modeling, and interactive visualization.
     """)
 
     st.markdown('---')
