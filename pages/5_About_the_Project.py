@@ -29,8 +29,9 @@ def main():
     st.subheader('Project Motivation')
     st.write("""
     Banff is one of Canada’s most popular tourist destinations, drawing millions of visitors each year. 
-    As traffic volumes increase, congestion at key routes and entrances has become a significant challenge 
-    for both travelers and park management.  
+    As traffic volumes increase, congestion at key routes and entrances has become a significant challenge for both travellers and Banff residents. 
+    
+    Parking availability further exacerbates these issues, particularly during the peak summer months when demand significantly exceeds capacity. Although legislative initiatives and park policies increasingly promote sustainable transportation methods, the practice of circling for parking remains a major contributor to congestion, emissions, and reduced visitor satisfaction.
              
     The goal of this project is to create a **decision-support platform** that helps stakeholders:
     - Monitor and forecast real-time route conditions.  
