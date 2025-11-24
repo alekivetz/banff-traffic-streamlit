@@ -28,6 +28,7 @@ def main():
     Banff is one of Canada’s most popular tourist destinations, drawing millions of visitors each year. 
     As traffic volumes increase, congestion at key routes and entrances has become a significant challenge 
     for both travelers and park management.  
+             
     The goal of this initiative is to create a **decision-support tool** that helps stakeholders 
     monitor, visualize, and forecast traffic conditions to improve visitor flow and reduce bottlenecks.
     """)
@@ -35,28 +36,35 @@ def main():
     # --- Application Overview ---
     st.subheader('Application Overview')
     st.write("""
-    The dashboard consists of three main components:
-    - **Traffic Delay Predictor** – A machine learning–powered page that estimates the probability 
-      of congestion and predicts route-specific delays.  
-    - **Traffic Analysis** – An interactive visualization page for exploring historical 
-      route data, delay distributions, and seasonal trends.  
-    - **About the Project** – A reference page explaining the data sources, methodology, and team behind the app.
+    The interactive dashboard now consists of **four integrated components**, each designed 
+    to address a different aspect of Banff’s mobility system:
+    
+    - **Traffic Delay Predictor** – A machine learning–powered module that estimates overall 
+      congestion risk and predicts per-route delay durations.  
+    - **Traffic Analysis** – An interactive data visualization page for exploring 
+      route performance, speed trends, and seasonal delay patterns.  
+    - **Parking Availability Predictor** – A predictive model that estimates **lot occupancy 60 minutes ahead**, 
+      helping to anticipate demand and prevent overcrowding.  
+    - **Parking Analysis** – A detailed analytical dashboard providing insights into 
+      **sessions, revenue, payment methods, and duration trends** across all parking units.  
     """)
 
     # --- Technical Overview ---
     st.subheader('Technical Overview')
     st.write("""
-    The project leverages historical traffic data from Banff’s monitored routes, 
-    including metrics such as **speed**, **travel time**, **current delay**, and **volume trends**.
+    The Banff Traffic Management system integrates several predictive and analytical components 
+    developed using **Python**, **pandas**, **scikit-learn**, **XGBoost**, and **Streamlit**.  
+    Each model focuses on a specific aspect of transportation management:
 
-    Two main models were developed:
-    - **Delay Risk Classifier** – a probabilistic model that estimates the likelihood of  
-      *no delay*, *minor delay*, or *major congestion* using temporal and seasonal variables.  
-    - **Per-Route Delay Regressor** – a route-level model trained with lag and rolling window 
-      features to predict the expected delay duration in minutes.
+    • **Traffic Delay Models** – Predict both the probability of congestion and the expected delay duration 
+      for each monitored route. These models incorporate temporal patterns, rolling averages, and historical 
+      traffic metrics to deliver accurate short-term forecasts.
 
-    Both models were implemented in Python using **pandas**, **scikit-learn**, and **XGBoost**, 
-    with deployment via **Streamlit** for interactive visualization.
+    • **Parking Occupancy Forecast** – Uses a regression-based XGBoost model trained on 15-minute interval data 
+      to estimate lot occupancy one hour into the future.  
+
+    All models were integrated into a single Streamlit application that provides interactive filtering, 
+    live forecasting, and data visualizations.
     """)
 
     # --- Workflow ---

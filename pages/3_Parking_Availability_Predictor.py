@@ -36,9 +36,9 @@ st.write("""
 This interactive dashboard uses a machine learning model to **forecast parking occupancy 60 minutes ahead** 
 for various lots in the town of Banff, helping visitors and planners manage congestion more effectively.
 """)
-st.markdown('---')  
-
 st.write('Select a parking lot to view its predicted occupancy 60 minutes ahead.')  
+
+st.markdown('---')  
 
 # --- Select Parking Lot ---
 units = sorted(features_df['unit'].unique())    
@@ -51,7 +51,9 @@ if unit_data.empty:
 
 unit_data = unit_data.sort_values('ts')
 latest_row = unit_data.iloc[-1]
-st.write(f'Using latest data timestamp for this los: **{latest_row["ts"]}**')
+
+st.markdown('---')
+st.info(f'Using latest data timestamp for this lot: **{latest_row["ts"]}**')
 
 # --- Prepare Features ---
 if 'unit_encoded' not in unit_data.columns:
@@ -75,12 +77,15 @@ pred_occ = max(0, min(pred_occ, int(latest_row['max_capacity'])))
 available = int(round(latest_row['max_capacity'] - pred_occ))
 
 # --- Display ---
-st.subheader(f'📍 {selected_unit}')
-st.metric('Current occupancy', f'{int(latest_row["occupancy"])}/{int(latest_row["max_capacity"])}')
+st.subheader(f'Selected Parking Lot: {selected_unit}')
 
-st.subheader('⏳ Forecast for 60 minutes ahead')
-st.metric('Predicted occupancy in 60 min', f'{pred_occ}/{int(latest_row["max_capacity"])}')
-st.metric('Estimated free spaces in 60 min', available)
+col1, col2, col3 = st.columns(3)  
+with col1:
+    st.metric('Current occupancy', f'{int(latest_row["occupancy"])}/{int(latest_row["max_capacity"])}')
+with col2:
+    st.metric('Predicted occupancy in 60 min', f'{pred_occ}/{int(latest_row["max_capacity"])}')
+with col3: 
+    st.metric('Estimated free spaces in 60 min', available)
 
 if available <= 0:
     st.error('🔴 Lot will likely be FULL in 60 minutes.')

@@ -11,7 +11,7 @@ st.set_page_config(page_title='Banff Parking Analysis', page_icon='🚗', layout
 display_banner()
 
 # --- Header ---
-st.title('🚗 Banff Parking Analysis')
+st.title('Banff Parking Analysis')
 st.write("""
 The **Banff Parking Dashboard** provides an interactive overview of parking activity across the town of Banff.  
 Explore key trends in **sessions, revenue, duration, and occupancy** to understand visitor behaviour and identify 
@@ -35,31 +35,38 @@ except Exception as e:
     st.error(f'❌ Failed to load data from Google Drive: {e}')
     st.stop()
 
-st.markdown('---')
+# --- Filters ---
+st.subheader('Filter Options')
 
-# --- Sidebar Filters ---
-st.sidebar.header('Filters')
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    payment_filter = st.multiselect(
+        'Payment Type',
+        options=df['Payment type'].unique(),
+        default=df['Payment type'].unique()
+    )
 
-payment_filter = st.sidebar.multiselect(
-    'Payment Type',
-    options=df['Payment type'].unique(),
-    default=df['Payment type'].unique()
-)
+with col2:
+    unit_filter = st.multiselect(
+        'Parking Lot',
+        options=df['Unit'].unique(),
+        default=df['Unit'].unique()
+    )
 
-unit_filter = st.sidebar.multiselect(
-    'Parking Unit',
-    options=df['Unit'].unique(),
-    default=df['Unit'].unique()
-)
+with col3:
+    month_filter = st.multiselect(
+        'Month',
+        options=df['month'].unique(),
+        default=df['month'].unique()
+    )
 
-month_filter = st.sidebar.multiselect(
-    'Month',
-    options=df['month'].unique(),
-    default=df['month'].unique()
-)
+with col4:
+    unit_search = st.text_input('Search Unit (optional)', placeholder='e.g., Bear Street')
 
-unit_search = st.sidebar.text_input('🔎 Search Unit')
-type_search = st.sidebar.text_input('🔎 Search Fee or Type')
+col5, col6 = st.columns(2)
+with col5:
+    type_search = st.text_input('Search Fee or Type', placeholder='e.g., Paystation or Event')
+
 
 # --- Apply Filters ---
 df_filtered = df[
@@ -78,7 +85,8 @@ if type_search:
     ]
 
 # --- Top KPIs ---
-st.subheader('📊 Key Performance Indicators')
+st.markdown('---')
+st.subheader('Key Performance Indicators')
 
 col1, col2, col3 = st.columns(3)
 
@@ -96,7 +104,7 @@ with col3:
 st.markdown('---')
 
 # --- Monthly Sessions Trend ---
-st.subheader('📅 Monthly Parking Sessions Trend')
+st.subheader('Monthly Parking Sessions Trend')
 
 monthly_df = df.groupby('month').size().reset_index(name='sessions')
 
@@ -108,10 +116,11 @@ monthly_fig = px.line(
     markers=True
 )
 
-st.plotly_chart(monthly_fig, use_container_width=True)
+st.plotly_chart(monthly_fig, width='stretch')
 
 # --- Day of Week Trend ---
-st.subheader('📆 Day of Week Parking Trend (Overall)')
+st.markdown('---')
+st.subheader('Day of Week Parking Trend (Overall)')
 
 weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 dow_df = df.groupby('day_of_week').size().reset_index(name='sessions')
@@ -125,10 +134,11 @@ dow_fig = px.bar(
     title='Parking Sessions by Day of Week (Overall)'
 )
 
-st.plotly_chart(dow_fig, use_container_width=True)
+st.plotly_chart(dow_fig, width='stretch')
 
 # --- Monthly Revenue Trend ---
-st.subheader('💵 Monthly Revenue Trend (Overall)')
+st.markdown('---')
+st.subheader('Monthly Revenue Trend (Overall)')
 
 month_order = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -147,10 +157,11 @@ rev_month_fig = px.line(
     markers=True
 )
 
-st.plotly_chart(rev_month_fig, use_container_width=True)
+st.plotly_chart(rev_month_fig, width='stretch')
 
 # --- Busiest Units (Overall) ---
-st.subheader('🏢 Top Busiest Parking Units (Overall)')
+st.markdown('---')
+st.subheader('Top Busiest Parking Units (Overall)')
 
 unit_counts = (
     df['Unit']
@@ -167,10 +178,11 @@ unit_fig = px.bar(
     labels={'Unit': 'Parking Lot', 'count': 'Sessions'}
 )
 
-st.plotly_chart(unit_fig, use_container_width=True)
+st.plotly_chart(unit_fig, width='stretch')
 
 # --- Payment Type Distribution ---
-st.subheader('💳 Payment Type Distribution (Overall)')
+st.markdown('---')
+st.subheader('Payment Type Distribution (Overall)')
 
 payment_fig = px.pie(
     df,
@@ -179,10 +191,11 @@ payment_fig = px.pie(
     hole=0.4
 )
 
-st.plotly_chart(payment_fig, use_container_width=True)
+st.plotly_chart(payment_fig, width='stretch')
 
 # --- Duration Distribution ---
-st.subheader('⏳ Duration Distribution (Filtered Data)')
+st.markdown('---')
+st.subheader('Duration Distribution (Filtered Data)')
 
 dur_df = df_filtered[df_filtered['duration'] != 'NO'].copy()
 dur_df['duration'] = dur_df['duration'].astype(float)
@@ -195,10 +208,11 @@ duration_fig = px.histogram(
     color_discrete_sequence=['#0072B2']
 )
 
-st.plotly_chart(duration_fig, use_container_width=True)
+st.plotly_chart(duration_fig, width='stretch')
 
 # --- Hour × Day-of-Week Heatmap ---
-st.subheader('🔥 Hour × Day-of-Week Parking Intensity Heatmap (Overall)')
+st.markdown('---')
+st.subheader('Hour × Day-of-Week Parking Intensity Heatmap (Overall)')
 
 heat_df = df[df['duration'] != 'NO'].copy()
 heat_df['duration'] = heat_df['duration'].astype(float)
@@ -215,7 +229,7 @@ heatmap_fig = px.imshow(
     color_continuous_scale='Blues'
 )
 
-st.plotly_chart(heatmap_fig, use_container_width=True)
+st.plotly_chart(heatmap_fig, width='stretch')
 
 # --- Footer ---
 st.markdown('---')

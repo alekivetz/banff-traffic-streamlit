@@ -15,28 +15,27 @@ def main():
     # --- Header ---
     st.title('Alpine Analysts: Banff Traffic Management')
     st.write("""
-    Welcome to the **Banff Traffic Management** system, a machine learning-powered dashboard 
-    that helps analyze and forecast traffic conditions and parking availability 
+    Welcome to the **Banff Traffic Management System**, a suite of machine learning-powered dashboards 
+    developed by **Team Alpine Analysts** to analyze, visualize, and forecast traffic and parking trends 
     across the town of Banff.
     """)
 
     st.markdown('---')
     st.subheader('Project Overview')
     st.write("""
-    This tool uses real traffic data from Banff National Park to estimate:
-
-    * **Overall delay risk probabilities** 
-    * **Route-specific delay duration**
-    * **Visualization and analysis** of travel times and delay patterns
+    This tool integrates multiple predictive and analytical components designed to support smarter mobility decisions:
+             
+    * **Traffic Delay Predictor** – Estimates overall congestion risk and route-specific delay durations.
+    * **Traffic Analysis Dashboard** – Visualizes historical travel times, volumes, and delay patterns.
+    * **Parking Availability Predictor** – Predicts parking lot occupancy 60 minutes ahead.
+    * **Parking Analysis Dashboard** – Provides interactive visual analytics for parking sessions, revenue, and activity trends.
+    * **About the Project** – Learn about data sources, modeling approach, and the Alpine Analysts team.
     """)
 
     st.info("""
-    Use the **sidebar** to navigate the application:
-
-    * **Traffic Delay Predictor** – explore overall congestion risk and 
-      route-specific delay predictions
-    * **Traffic Analysis** - Visualize historical route data to uncover patterns
-    * **About the Project** – learn about the data sources, modeling approach, and the Alpine Analysts team
+    Use the **sidebar** to navigate between pages.  
+    Each section provides insights into a different aspect of Banff’s transportation ecosystem — 
+    combining real-world data, predictive modeling, and interactive visualization.
     """)
 
     st.markdown('---')
