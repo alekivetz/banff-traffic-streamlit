@@ -83,6 +83,7 @@ def main():
     st.markdown('---')
     st.caption("""
     Developed as part of **CMPT 3835 – Work Integrated Learning 2**  
+    
     NorQuest College · Fall 2025 · Instructors: Uchenna Mgbaja, Palwasha Afsar
     """)
 
