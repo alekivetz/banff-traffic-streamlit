@@ -11,72 +11,14 @@ import numpy as np
 
 from utils.display_images import display_image, display_banner
 from utils.route_info import ROUTE_DESCRIPTIONS
-from utils.google_drive_helpers import download_from_drive
+from utils.data_loader import init_app_state
 
+# --- Initialization ---
+init_app_state()
 
-# --- Load models and data ---
-@st.cache_data(ttl=86400, show_spinner=False)
-def fetch_parquet_from_drive():
-    """Download and cache the Parquet data file from Google Drive."""
-    file_id = st.secrets['ROUTES_WITH_LAGS_ID']
-    try:
-        data_bytes = download_from_drive(file_id)
-        return pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
-    except Exception as e:
-        st.warning(f'Could not load from Google Drive ({e}). Loading local copy instead.')
-        return pd.read_parquet('data/routes_with_lags.parquet', engine='fastparquet')
-    
-
-@st.cache_resource(show_spinner=False)
-def fetch_classifier():
-    """Download and cache the classifier model from Drive."""   
-    file_id = st.secrets['CLASSIFIER_MODEL_ID']
-    try:
-        model_bytes = download_from_drive(file_id)
-        model = joblib.load(io.BytesIO(model_bytes))
-        return model
-    except Exception as e:
-        st.error(f'Failed top load classifier from Drive ({e}).')
-        raise
-
-
-@st.cache_resource(show_spinner=False)
-def fetch_regressors():
-    """Download and cache all per-route models from Drive."""
-    route_dict = json.loads(st.secrets['ROUTE_MODELS_IDS'])
-    models = {}
-    for route, file_id in route_dict.items():
-        try:
-            model_bytes = download_from_drive(file_id)
-            model = joblib.load(io.BytesIO(model_bytes))
-            models[route] = model
-
-        except Exception as e:
-            st.warning(f'Could not load model for {route}: {e}')
-    return models
-
-
-def get_models():
-    """Load classifier and regressors once per session."""  
-    if 'classifier' not in st.session_state:    
-        with st.spinner('Loading models...'):
-            st.session_state.classifier = fetch_classifier()
-            st.session_state.regressors = fetch_regressors()
-    return st.session_state.classifier, st.session_state.regressors
-
-
-def load_data():
-    """Load the data once per session (avoid refetching on widget changes)."""
-    if 'routes_df' not in st.session_state:
-        with st.spinner('Loading dataset...'):
-            df = fetch_parquet_from_drive()
-            if 'timestamp' in df.columns and df['timestamp'].dtype == 'object':
-                df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-            st.session_state.routes_df = df
-    return st.session_state.routes_df
-
-clf, regressors = get_models()
-df = load_data()
+clf = st.session_state.classifier
+regressors = st.session_state.regressors
+df = st.session_state.routes_df
 
 # --- UI Setup ---
 st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')

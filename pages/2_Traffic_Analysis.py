@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import io
 
 from utils.display_images import display_banner
-from utils.google_drive_helpers import download_from_drive
+from utils.data_loader import download_from_drive
 
 # --- Page Config ---
 st.set_page_config(page_title='Banff Traffic Analysis', page_icon='📈', layout='wide')

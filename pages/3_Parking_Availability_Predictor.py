@@ -6,7 +6,7 @@ import shap
 import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
-from utils.google_drive_helpers import download_from_drive
+from utils.data_loader import download_from_drive
 
 # --- Load models and data ---
 @st.cache_data(ttl=86400, show_spinner=False)
