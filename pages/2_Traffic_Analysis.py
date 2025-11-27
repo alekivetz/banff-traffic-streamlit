@@ -152,25 +152,6 @@ fig5 = px.bar(monthly_avg, x='month', y='actual delay (mins)', color='route', ba
               labels={'month': 'Month', 'actual delay (mins)': 'Average Delay (minutes)'})
 st.plotly_chart(fig5, width='stretch')
 
-
-# --- 6. XAI Residual & Correlation Diagnostics -----------------------
-st.markdown('---')
-st.subheader('6. Explainable AI: Diagnostics and Feature Insights')
-
-# approximate residual = expected base delay vs actual
-df_xai = filtered_df.copy()
-df_xai.loc[:, 'expected_delay'] = base_delay + np.random.normal(0, 1, len(df_xai))
-df_xai.loc[:, 'residual'] = df_xai['actual delay (mins)'] - df_xai['expected_delay']
-
-fig_resid = px.scatter(
-    df_xai, x='expected_delay', y='residual', color='route',
-    title='Residual-style Plot (Actual - Expected Delay)',
-    labels={'expected_delay': 'Expected Delay (minutes)', 'residual': 'Residual (minutes)'},
-    opacity=0.7
-)
-fig_resid.add_hline(y=0, line_dash='dash', line_color='gray')
-st.plotly_chart(fig_resid, width='stretch') 
-
 # --- Footer ---
 st.markdown('---')
 st.caption("""
