@@ -6,27 +6,13 @@ import shap
 import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
-from utils.data_loader import download_from_drive
+from utils.data_loader import init_app_state
 
-# --- Load models and data ---
-@st.cache_data(ttl=86400, show_spinner=False)
-def load_parking_data():
-    """Load model, encoder, and data from Google Drive."""
-    model_bytes = download_from_drive(st.secrets['PARKING_MODEL_ID'])
-    encoder_bytes = download_from_drive(st.secrets['PARKING_ENCODER_ID'])
-    data_bytes = download_from_drive(st.secrets['PARKING_DATA_ID'])
-
-    model = joblib.load(io.BytesIO(model_bytes))
-    unit_encoder = joblib.load(io.BytesIO(encoder_bytes))   
-    features_df = pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
-
-    return model, unit_encoder, features_df
-
-try: 
-    model, unit_encoder, features_df = load_parking_data()
-except Exception as e:
-    st.error(f'Failed to load parking data from Google Drive ({e}).')
-    st.stop()
+# --- Initialization ---
+init_app_state()
+model = st.session_state.parking_model
+unit_encoder = st.session_state.parking_encoder
+features_df = st.session_state.parking_df
 
 # --- UI Setup ---
 st.set_page_config(page_title='Parking Availability Predictor', page_icon='⏱️', layout='wide')
@@ -97,36 +83,6 @@ else:
     st.success('🟢 Spaces should be available in 60 minutes.')
 
 st.caption('Forecasts generated using an XGBoost regression model trained on 15-minute occupancy intervals.')
-
-# --- XAI Section ---
-st.markdown('---')
-st.subheader('Model Explainability')
-with st.expander('View Why the Model Predicted This Lot', expanded=False):
-    st.write('Forecasts are generated using an XGBoost regression model trained on 15-minute occupancy intervals.')
-
-    try:
-        explainer = shap.Explainer(model)
-        shap_values = explainer(X_current)
-
-        # Feature importance summary
-        st.markdown('**Global Feature Importance (SHAP Summary)**')
-        fig_sum, ax = plt.subplots(figsize=(8, 5))
-        shap.summary_plot(shap_values, X_current, show=False)
-        st.pyplot(fig_sum)
-        plt.clf()
-
-        # Local explanation for this single prediction
-        st.markdown('**Local Explanation for Selected Parking Lot**')
-        shap_html = shap.force_plot(
-            explainer.expected_value,
-            shap_values.values[0, :],
-            X_current.iloc[0, :],
-            matplotlib=False
-        )
-        st.components.v1.html(shap.getjs() + shap_html.html(), height=220)
-
-    except Exception as e:
-        st.warning(f'Could not generate SHAP explanations ({e}).')
 
 # --- Footer ---
 st.markdown('---')

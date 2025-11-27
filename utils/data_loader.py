@@ -64,6 +64,21 @@ def fetch_regressors():
     return models
 
 
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def load_parking_data():
+    """Load model, encoder, and data from Google Drive."""
+    model_bytes = download_from_drive(st.secrets['PARKING_MODEL_ID'])
+    encoder_bytes = download_from_drive(st.secrets['PARKING_ENCODER_ID'])
+    data_bytes = download_from_drive(st.secrets['PARKING_DATA_ID'])
+
+    model = joblib.load(io.BytesIO(model_bytes))
+    unit_encoder = joblib.load(io.BytesIO(encoder_bytes))   
+    features_df = pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
+
+    return model, unit_encoder, features_df
+
+
 def init_app_state():
     """Initialize and store data/models in session_state."""
     if 'routes_df' not in st.session_state:
@@ -73,3 +88,12 @@ def init_app_state():
         with st.spinner('Loading models...'):
             st.session_state.classifier = fetch_classifier()
             st.session_state.regressors = fetch_regressors()
+    if 'parking_model' not in st.session_state:
+        with st.spinner('Loading parking resources...'):
+            try:
+                parking_model, parking_encoder, parking_df = load_parking_data()
+                st.session_state.parking_model = parking_model
+                st.session_state.parking_encoder = parking_encoder
+                st.session_state.parking_df = parking_df
+            except Exception as e:
+                st.warning(f'Could not load parking resources: {e}')
