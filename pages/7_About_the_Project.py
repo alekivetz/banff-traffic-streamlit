@@ -56,6 +56,7 @@ def main():
     | **2. Traffic Analysis Dashboard** | Interactive visualizations of historical speed and delay trends across Banff’s main routes. |
     | **3. Parking Availability Predictor** | Predicts parking lot occupancy 60 minutes into the future using an XGBoost regression model trained on 15-minute intervals. |
     | **4. Parking Analysis Dashboard** | Aggregates parking session data to visualize sessions, revenue, duration, and demand by time and location. |
+    | **5. Model Explainability** | Displays SHAP-based feature importance and interpretable plots to explain which temporal, spatial, and behavioral factors most influence model predictions. |
     """)
 
     st.markdown('---')

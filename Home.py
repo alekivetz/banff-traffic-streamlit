@@ -29,6 +29,7 @@ def main():
     * **Traffic Analysis Dashboard** – Visualizes historical travel times, volumes, and delay patterns.
     * **Parking Availability Predictor** – Predicts parking lot occupancy 60 minutes ahead.
     * **Parking Analysis Dashboard** – Provides interactive visual analytics for parking sessions, revenue, and activity trends.
+    * **Model Explainability – Highlights which features most influenced each model’s predictions using SHAP values and importance rankings.
     * **About the Project** – Learn about data sources, modeling approach, and the Alpine Analysts team.
     """)
 
