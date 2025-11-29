@@ -1,6 +1,7 @@
 import streamlit as st
 from google.oauth2 import service_account
 from utils.display_images import display_banner
+from utils.data_loader import init_app_state
 
 def main():
     st.set_page_config(
@@ -11,6 +12,9 @@ def main():
 
     # --- Banner ---
     display_banner()
+
+    # --- Initialize app state once ---
+    init_app_state()
 
     # --- Header ---
     st.title('Alpine Analysts: Banff Traffic Management')
