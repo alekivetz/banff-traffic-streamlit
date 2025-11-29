@@ -9,10 +9,9 @@ from utils.display_images import display_banner
 from utils.data_loader import init_app_state
 
 # --- Initialization ---
-init_app_state()
 model = st.session_state.parking_model
 unit_encoder = st.session_state.parking_encoder
-features_df = st.session_state.parking_df
+features_df = st.session_state.parking_df_model
 
 # --- UI Setup ---
 st.set_page_config(page_title='Parking Availability Predictor', page_icon='⏱️', layout='wide')

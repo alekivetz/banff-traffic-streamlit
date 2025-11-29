@@ -77,7 +77,7 @@ def main():
     st.write("""
     **Core Models:**
     - **Delay Risk Classifier** – Predicts whether a route will experience *no delay*, *minor delay*, or *major congestion*.  
-    - **Per-Route Delay Regressor** – Forecasts the expected delay duration (minutes) per route using temporal and lag-based features.  
+    - **Per-Route Delay Regressor** – Forecasts the expected delay duration (minutes) per route using RandomForest with temporal and lag-based features.  
     - **Parking Occupancy Forecaster** – Uses a regression-based XGBoost model to predict 60-minute-ahead lot occupancy.
     """)
 

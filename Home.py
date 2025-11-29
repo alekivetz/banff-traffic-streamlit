@@ -15,6 +15,7 @@ def main():
 
     # --- Initialize app state once ---
     init_app_state()
+    st.session_state.initialized = True
 
     # --- Header ---
     st.title('Alpine Analysts: Banff Traffic Management')

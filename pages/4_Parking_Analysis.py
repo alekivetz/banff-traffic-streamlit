@@ -23,20 +23,8 @@ peak usage periods throughout the year.
 
 st.markdown('---')
 
-# --- Load Data ---
-@st.cache_data(ttl=86400, show_spinner=False)
-def load_data():
-    '''Load the merged and cleaned parking dataset from Google Drive.'''
-    file_id = st.secrets['PARKING_VIS_ID']
-    data_bytes = download_from_drive(file_id)
-    df = pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
-    return df
-
-try:
-    df = load_data()
-except Exception as e:
-    st.error(f'❌ Failed to load data from Google Drive: {e}')
-    st.stop()
+# --- Initialization ---
+df = st.session_state.parking_df_vis
 
 # --- Filters ---
 st.subheader('Filter Options')

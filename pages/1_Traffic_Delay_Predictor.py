@@ -14,11 +14,10 @@ from utils.route_info import ROUTE_DESCRIPTIONS
 from utils.data_loader import init_app_state
 
 # --- Initialization ---
-init_app_state()
-
+df = st.session_state.routes_df_model
 clf = st.session_state.classifier
 regressors = st.session_state.regressors
-df = st.session_state.routes_df
+
 
 # --- UI Setup ---
 st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')

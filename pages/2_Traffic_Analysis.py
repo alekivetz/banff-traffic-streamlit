@@ -54,40 +54,8 @@ with f3:
 
 st.markdown('---')
 
-# --- Load Data ---
-@st.cache_data(ttl=86400, show_spinner=False)
-def fetch_routes_vis():
-    """Download routes visualization data Google Drive."""
-    try:
-        file_id = st.secrets['ROUTES_VIS_ID']
-        data_bytes = download_from_drive(file_id)
-        df = pd.read_parquet(io.BytesIO(data_bytes), engine='fastparquet')
-
-        # --- Parse and clean ---
-        df['calculation time'] = pd.to_datetime(df['calculation time'], errors='coerce')
-        df = df.dropna(subset=['calculation time'])
-        df['route'] = df['route'].astype(str)
-
-        # --- Derive temporal features ---
-        df['hour'] = df['calculation time'].dt.hour
-        df['day_of_week'] = df['calculation time'].dt.day_name()
-        df['month'] = df['calculation time'].dt.strftime('%B')
-
-        return df
-    
-    except Exception as e:
-        st.warning(f'Could not load from Google Drive ({e})')
-        return pd.DataFrame()
-
-
-def get_routes_vis():
-    """Load once per user session."""
-    if 'df_vis' not in st.session_state:
-        with st.spinner('Loading route visualization data...'):
-            st.session_state.df_vis = fetch_routes_vis()
-    return st.session_state.df_vis
-
-df = get_routes_vis()
+# --- Load data ---
+df = st.session_state.routes_df_vis_chatbot
 
 # --- Apply Filters ---
 filtered_df = df[

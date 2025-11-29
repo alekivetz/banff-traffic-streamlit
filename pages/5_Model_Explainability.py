@@ -20,8 +20,8 @@ This page illustrates **how each machine learning model makes its predictions** 
 st.markdown('---')
 
 # --- LOAD DATA & MODELS ---
-init_app_state()
-df = st.session_state.routes_df
+
+df = st.session_state.routes_df_model
 clf = st.session_state.classifier
 regressors = st.session_state.regressors
 
@@ -194,7 +194,7 @@ This model predicts **parking occupancy and demand trends** by analyzing recent 
 ''')
 
 parking_model = st.session_state.parking_model
-parking_df = st.session_state.parking_df
+parking_df = st.session_state.parking_df_model
 
 # --- Prepare numeric data ---
 numeric_cols = parking_df.select_dtypes(include=['number', 'bool']).columns.tolist()
