@@ -146,64 +146,90 @@ using time-based, spatial, and lagged travel features.
 
 """)
 
+# --- Combine SHAP results across routes ---
+all_shap_tables = []
+all_shap_values = []
+all_X = []
 
-# --- Route selector ---
-available_routes = sorted(regressors.keys(), key=lambda x: int(x.split()[-1]))
-selected_route = st.selectbox('Select a route', available_routes)
+for route, model in regressors.items():
+    route_df = (
+        df[df['route'] == route]
+        .drop(columns=['timestamp', 'route'], errors='ignore')
+        .select_dtypes(include=['number', 'bool'])
+        .tail(100)
+    )
 
-# --- Load model & data for selected route ---
-model = regressors.get(selected_route)
-route_df = (
-    df[df['route'] == selected_route]
-    .drop(columns=['timestamp', 'route'], errors='ignore')
-    .select_dtypes(include=['number', 'bool'])
-    .tail(100)
-)
+    if model is None or route_df.empty:
+        continue
 
-if model is None or route_df.empty:
-    st.warning(f'Model or data missing for {selected_route}.')
-else:
     # Align columns to model expectations
     if hasattr(model, 'feature_names_in_'):
         X_aligned = route_df.reindex(columns=model.feature_names_in_, fill_value=0)
     else:
         X_aligned = route_df.copy()
 
-    # Compute SHAP values
     shap_values, shap_df = compute_shap(model, X_aligned)
+    shap_df['route'] = route
+    all_shap_tables.append(shap_df)
 
-    # Compute model importances (if available)
-    if hasattr(model, 'feature_importances_'):
-        feature_names = getattr(model, 'feature_names_in_', X_aligned.columns)
-        rf_imp = pd.DataFrame({
-            'Feature': feature_names,
-            'Model Importance': model.feature_importances_[:len(feature_names)]
-        })
-    else:
-        rf_imp = pd.DataFrame({'Feature': X_aligned.columns, 'Model Importance': np.nan})
+    all_shap_values.append(np.abs(shap_values.values))
+    all_X.append(X_aligned)
 
-    # --- Merge safely ---
-    table = (
-        pd.merge(shap_df, rf_imp, on='Feature', how='left')
+# --- Combine results safely ---
+if all_shap_tables:
+    combined_shap = (
+        pd.concat(all_shap_tables)
+        .groupby('Feature', as_index=False)['Mean |SHAP value|']
+        .mean()
         .sort_values('Mean |SHAP value|', ascending=False)
-        .round(5)
-        .drop_duplicates(subset='Feature')
+        .reset_index(drop=True)
     )
 
+    # merge model feature importances (averaged)
+    all_importances = []
+    for route, model in regressors.items():
+        if hasattr(model, 'feature_importances_'):
+            feats = getattr(model, 'feature_names_in_', None)
+            if feats is not None:
+                imp_df = pd.DataFrame({
+                    'Feature': feats,
+                    'Model Importance': model.feature_importances_[:len(feats)]
+                })
+                all_importances.append(imp_df)
+    if all_importances:
+        combined_imp = (
+            pd.concat(all_importances)
+            .groupby('Feature', as_index=False)['Model Importance']
+            .mean()
+        )
+        combined_table = pd.merge(combined_shap, combined_imp, on='Feature', how='left')
+    else:
+        combined_table = combined_shap.copy()
+
     # --- Layout ---
-    st.subheader(f'{selected_route}')
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        st.markdown('**SHAP Summary Plot**')
+        st.markdown('**SHAP Summary Plot (All Routes)**')
+
+        # Flatten all data and SHAP values
+        X_all = pd.concat(all_X, axis=0)
+        shap_all = np.concatenate(all_shap_values, axis=0)
+
+        # Align lengths safely
+        n = min(len(X_all), shap_all.shape[0], 1000)
+        X_all = X_all.sample(n, random_state=42)
+        shap_all = shap_all[:n]
+
         fig, _ = plt.subplots(figsize=(7, 4))
-        shap.summary_plot(shap_values, X_aligned, show=False)
+        shap.summary_plot(shap_all, X_all, show=False)
         st.pyplot(fig)
         plt.clf()
 
+
     with col2:
-        st.markdown('**Top Feature Importances**')
-        st.dataframe(table.head(10), hide_index=True, width='stretch')
+        st.markdown('**Top 10 Feature Importances**')
+        st.dataframe(combined_table.head(10), hide_index=True, width='stretch')
 
     # --- Interpretation ---
     st.markdown('''
