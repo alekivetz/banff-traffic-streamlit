@@ -9,8 +9,12 @@ from utils.display_images import display_banner
 from utils.data_loader import load_parking_resources
 
 # --- Initialization ---
-model, unit_encoder, features_df = load_parking_resources()
-
+with st.spinner('Loading parking resources...'):
+    try:
+        model, unit_encoder, features_df = load_parking_resources()
+    except Exception as e:
+        st.error(f'Could not load parking resources: {e}')
+    
 # --- UI Setup ---
 st.set_page_config(page_title='Parking Availability Predictor', page_icon='⏱️', layout='wide')
 display_banner()

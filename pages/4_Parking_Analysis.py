@@ -24,7 +24,11 @@ peak usage periods throughout the year.
 st.markdown('---')
 
 # --- Initialization ---
-df = fetch_parking_vis()
+with st.spinner('Loading parking data...'): 
+    try:
+        df = fetch_parking_vis()
+    except Exception as e:
+        st.error(f'Could not load parking data: {e}')
 
 # --- Filters ---
 st.subheader('Filter Options')

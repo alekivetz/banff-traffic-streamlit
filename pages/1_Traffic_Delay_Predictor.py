@@ -14,9 +14,13 @@ from utils.route_info import ROUTE_DESCRIPTIONS
 from utils.data_loader import fetch_routes_data, fetch_classifier, fetch_regressors
 
 # --- Initialization ---
-df = fetch_routes_data()
-clf = fetch_classifier()
-regressors = fetch_regressors()
+with st.spinner('Loading route data and models...'):
+    try:
+        df = fetch_routes_data()
+        clf = fetch_classifier()
+        regressors = fetch_regressors()
+    except Exception as e:
+        st.error(f'Could not load route data and models: {e}')
 
 # --- UI Setup ---
 st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')

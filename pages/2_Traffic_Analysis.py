@@ -55,7 +55,11 @@ with f3:
 st.markdown('---')
 
 # --- Load data ---
-df = fetch_routes_vis_chatbot()
+with st.spinner('Loading route data...'):
+    try:
+        df = fetch_routes_vis_chatbot()
+    except Exception as e:
+        st.error(f'Could not load route data: {e}')
 
 # --- Apply Filters ---
 filtered_df = df[

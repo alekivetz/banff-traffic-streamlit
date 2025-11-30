@@ -18,9 +18,14 @@ This page illustrates **how each machine learning model makes its predictions** 
 st.markdown('---')
 
 # --- LOAD DATA & MODELS ---
-df = fetch_routes_data()
-clf = fetch_classifier()
-regressors = fetch_regressors()
+with st.spinner('Loading data and models...'):
+    try:
+        df = fetch_routes_data()
+        clf = fetch_classifier()
+        regressors = fetch_regressors()
+        parking_model, unit_encoder, parking_df = load_parking_resources()
+    except Exception as e:
+        st.error(f'Could not load data and models: {e}')
 
 # --- HELPER FUNCTIONS ---
 def compute_shap_light(model, X):
@@ -198,8 +203,6 @@ An **XGBoost regressor** predicts parking occupancy and duration based on hourly
 - R²: 0.95  
 - MAE: 0.969 hours  
 """)
-
-parking_model, unit_encoder, parking_df = load_parking_resources()
 
 numeric_cols = parking_df.select_dtypes(include=['number', 'bool']).columns.tolist()
 X_parking = parking_df[numeric_cols].dropna().tail(200)

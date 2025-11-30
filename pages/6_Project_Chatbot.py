@@ -82,12 +82,14 @@ st.markdown("""
 # --- Initialization ----
 if 'messages' not in st.session_state:
     st.session_state.messages = []
-try:
-    routes_df = fetch_routes_vis_chatbot()
-    parking_df = fetch_parking_chatbot()
-except Exception as e:
-    st.error(f'Could not load chatbot data: {e}')
-    st.stop()
+
+with st.spinner('Loading chatbot data...'):
+    try:
+        routes_df = fetch_routes_vis_chatbot()
+        parking_df = fetch_parking_chatbot()
+    except Exception as e:
+        st.error(f'Could not load chatbot data: {e}')
+        st.stop()
 
 
 # --- Context Documents ---
@@ -178,8 +180,12 @@ def load_embeddings():
 def load_generator():
     return pipeline('text2text-generation', model='google/flan-t5-small', device='mps')
 
-embedder, doc_embeddings = load_embeddings()
-generator = load_generator()
+with st.spinner('Loading chatbot resources...'):
+    try: 
+        embedder, doc_embeddings = load_embeddings()
+        generator = load_generator()
+    except Exception as e:
+        st.error(f'Could not load chatbot resources: {e}')
 
 def retrieve_context(query, top_k=2):
     q_lower = query.lower()
