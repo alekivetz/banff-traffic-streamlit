@@ -171,7 +171,7 @@ def load_embeddings():
 
 @st.cache_resource
 def load_generator():
-    return pipeline('text2text-generation', model='google/flan-t5-base', device='mps')
+    return pipeline('text2text-generation', model='google/flan-t5-small', device='mps')
 
 embedder, doc_embeddings = load_embeddings()
 generator = load_generator()
