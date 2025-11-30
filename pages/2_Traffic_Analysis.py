@@ -6,13 +6,21 @@ from datetime import datetime, timedelta
 import io
 
 from utils.display_images import display_banner
-from utils.data_loader import fetch_routes_vis_chatbot
+from utils.data_loader import fetch_routes_data
 
 # --- Page Config ---
 st.set_page_config(page_title='Banff Traffic Analysis', page_icon='📈', layout='wide')
 
 # --- Header ---
 display_banner()
+
+# --- Load data ---
+with st.spinner('Loading route data...'):
+    try:
+        df = fetch_routes_data()
+    except Exception as e:
+        st.error(f'Could not load route data: {e}')
+
 st.title('Banff Traffic Congestion Analysis')
 st.write('This interactive dashboard visualizes historical traffic data to uncover delay patterns, peak-hour behavior, and route performance within the town of Banff.')
 
@@ -54,24 +62,17 @@ with f3:
 
 st.markdown('---')
 
-# --- Load data ---
-with st.spinner('Loading route data...'):
-    try:
-        df = fetch_routes_vis_chatbot()
-    except Exception as e:
-        st.error(f'Could not load route data: {e}')
-
 # --- Apply Filters ---
 filtered_df = df[
-    (df['calculation time'].dt.date >= selected_dates[0]) &
-    (df['calculation time'].dt.date <= selected_dates[1]) &
+    (df['timestamp'].dt.date >= selected_dates[0]) &
+    (df['timestamp'].dt.date <= selected_dates[1]) &
     (df['route'].isin(selected_routes))
 ]
 
 # --- 1. Average Speed by Route and Hour ---
 st.subheader('1. Average Speed by Route and Hour of Day')
-heatmap_data = filtered_df.pivot_table(index='route', columns='hour', values='speed(km/h)', aggfunc='mean')
-fig1 = px.imshow(heatmap_data, labels=dict(x='Hour of Day', y='Route', color='Speed (km/h)'),
+heatmap_data = filtered_df.pivot_table(index='route', columns='hour', values='speed_kmh', aggfunc='mean')
+fig1 = px.imshow(heatmap_data, labels=dict(x='Hour of Day', y='Route', color='speed_kmh'),
                  x=heatmap_data.columns, y=heatmap_data.index, aspect='auto',
                  color_continuous_scale='RdYlGn_r', title='Average Speed by Route and Hour of Day')
 fig1.update_xaxes(side='bottom')
@@ -81,10 +82,10 @@ st.markdown('---')
 
 # --- 2. Daily Delay Trends ---
 st.subheader('2. Daily Delay Trends by Route')
-fig2 = px.line(filtered_df.groupby(['route', pd.Grouper(key='calculation time', freq='D')])['actual delay (mins)'].mean().reset_index(),
-               x='calculation time', y='actual delay (mins)', color='route',
+fig2 = px.line(filtered_df.groupby(['route', pd.Grouper(key='timestamp', freq='D')])['actual_delay'].mean().reset_index(),
+               x='timestamp', y='actual_delay', color='route',
                title='Average Daily Delay by Route',
-               labels={'calculation time': 'Date', 'actual delay (mins)': 'Average Delay (minutes)'})
+               labels={'timestamp': 'Date', 'actual_delay': 'Average Delay (minutes)'})
 st.plotly_chart(fig2, width='stretch')
 
 st.markdown('---')
@@ -93,10 +94,10 @@ st.markdown('---')
 st.subheader('3. Delay Distribution by Day of Week')
 weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 filtered_df.loc[:, 'day_of_week'] = pd.Categorical(filtered_df['day_of_week'], categories=weekday_order, ordered=True)
-fig3 = px.box(filtered_df, x='day_of_week', y='actual delay (mins)', color='day_of_week',
+fig3 = px.box(filtered_df, x='day_of_week', y='actual_delay', color='day_of_week',
               title='Delay Distribution by Day of Week',
               category_orders={'day_of_week': weekday_order},
-              labels={'day_of_week': 'Day of Week', 'actual delay (mins)': 'Delay (minutes)'})
+              labels={'day_of_week': 'Day of Week', 'actual_delay': 'Delay (minutes)'})
 fig3.update_layout(showlegend=False)
 st.plotly_chart(fig3, width='stretch')
 
@@ -105,10 +106,10 @@ st.markdown('---')
 # --- 4. Speed vs Delay ---
 st.subheader('4. Speed vs. Delay Relationship')
 sample_df = filtered_df.sample(min(1000, len(filtered_df)), random_state=42)
-fig4 = px.scatter(sample_df, x='speed(km/h)', y='actual delay (mins)', color='route',
+fig4 = px.scatter(sample_df, x='speed_kmh', y='actual_delay', color='route',
                   title='Speed vs. Delay by Route', trendline='lowess',
-                  labels={'speed(km/h)': 'Speed (km/h)', 'actual delay (mins)': 'Delay (minutes)'},
-                  hover_data=['calculation time'])
+                  labels={'speed_kmh': 'speed_kmh', 'actual_delay': 'Delay (minutes)'},
+                  hover_data=['timestamp'])
 st.plotly_chart(fig4, width='stretch')
 
 st.markdown('---')
@@ -118,10 +119,10 @@ st.subheader('5. Monthly Delay Trends')
 month_order = ['January', 'February', 'March', 'April', 'May', 'June',
                'July', 'August', 'September', 'October', 'November', 'December']
 filtered_df.loc[:, 'month'] = pd.Categorical(filtered_df['month'], categories=month_order, ordered=True)
-monthly_avg = filtered_df.groupby(['month', 'route'], observed=False)['actual delay (mins)'].mean().reset_index()
-fig5 = px.bar(monthly_avg, x='month', y='actual delay (mins)', color='route', barmode='group',
+monthly_avg = filtered_df.groupby(['month', 'route'], observed=False)['actual_delay'].mean().reset_index()
+fig5 = px.bar(monthly_avg, x='month', y='actual_delay', color='route', barmode='group',
               title='Average Monthly Delay by Route',
-              labels={'month': 'Month', 'actual delay (mins)': 'Average Delay (minutes)'})
+              labels={'month': 'Month', 'actual_delay': 'Average Delay (minutes)'})
 st.plotly_chart(fig5, width='stretch')
 
 # --- Footer ---

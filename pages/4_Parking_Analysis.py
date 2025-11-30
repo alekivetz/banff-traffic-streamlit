@@ -6,12 +6,19 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
-from utils.data_loader import fetch_parking_vis
+from utils.data_loader import fetch_parking_vis_chatbot
 
 
 # --- UI ---
 st.set_page_config(page_title='Banff Parking Analysis', page_icon='🚗', layout='wide')
 display_banner()
+
+# --- Initialization ---
+with st.spinner('Loading parking data...'): 
+    try:
+        df = fetch_parking_vis_chatbot()
+    except Exception as e:
+        st.error(f'Could not load parking data: {e}')
 
 # --- Header ---
 st.title('Banff Parking Analysis')
@@ -23,12 +30,6 @@ peak usage periods throughout the year.
 
 st.markdown('---')
 
-# --- Initialization ---
-with st.spinner('Loading parking data...'): 
-    try:
-        df = fetch_parking_vis()
-    except Exception as e:
-        st.error(f'Could not load parking data: {e}')
 
 # --- Filters ---
 st.subheader('Filter Options')

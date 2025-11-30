@@ -8,57 +8,8 @@ from datetime import datetime
 from sentence_transformers import SentenceTransformer, util
 from transformers import pipeline
 from utils.display_images import display_banner
-from utils.data_loader import fetch_routes_vis_chatbot, fetch_parking_chatbot
+from utils.data_loader import fetch_routes_data, fetch_parking_vis_chatbot
 
-# --- Page Config & Style ---
-st.set_page_config(page_title='Banff Project Chatbot', page_icon='💬', layout='wide')
-display_banner()
-st.title('Banff Traffic Management Chatbot')
-st.write("""
-Ask questions about **traffic conditions**, **parking analytics**, or the **project itself**.  
-This chatbot blends **retrieval-augmented generation (RAG)** with **data-driven insights** to provide both factual and conceptual answers.
-""")
-
-# --- Example Queries ---
-# Show expanded only before first chat
-expanded_state = not st.session_state.get('messages')
-
-with st.expander("💡 Try asking questions like these:", expanded=expanded_state):
-    st.markdown("""
-    Ask about **parking**, **traffic**, or **project details** to explore insights powered by machine learning.
-    """)
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.markdown("""
-        ### 🅿️ Parking Queries
-        - What is the average parking duration?  
-        - How many parking sessions were there on **2025-08-31**?  
-        - What is the average parking duration for **BANFF01**?  
-        - Which unit has the **longest average duration**?
-        """)
-
-    with col2:
-        st.markdown("""
-        ### 🚗 Traffic Queries
-        - What is the **average delay** across all routes?  
-        - What’s the **maximum speed** recorded on Route 3?  
-        - Show me the **delay trends** for November.  
-        - Which routes have the **highest congestion**?
-        """)
-
-    with col3:
-        st.markdown("""
-        ### 📊 Project & Model Queries
-        - How does the Banff Traffic Management project work?  
-        - What algorithms are used for prediction?  
-        - How do **SHAP values** explain congestion predictions?  
-        - How did the models perform?  
-        """)
-
-
-st.markdown('---')
 
 st.markdown("""
 <style>
@@ -79,19 +30,6 @@ st.markdown("""
     .stChatMessage { max-height: 70vh; overflow-y: auto; }
 </style>
 """, unsafe_allow_html=True)
-
-
-# --- Initialization ----
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-
-with st.spinner('Loading chatbot data...'):
-    try:
-        routes_df = fetch_routes_vis_chatbot()
-        parking_df = fetch_parking_chatbot()
-    except Exception as e:
-        st.error(f'Could not load chatbot data: {e}')
-        st.stop()
 
 
 # --- Context Documents ---
@@ -187,13 +125,6 @@ def load_generator():
         model='google/flan-t5-small',
         device=0 if device == 'cuda' else -1
     )
-
-with st.spinner('Loading chatbot resources...'):
-    try: 
-        embedder, doc_embeddings = load_embeddings()
-        generator = load_generator()
-    except Exception as e:
-        st.error(f'Could not load chatbot resources: {e}')
 
 def retrieve_context(query, top_k=2):
     q_lower = query.lower()
@@ -360,9 +291,9 @@ def handle_traffic_query(q):
 
     # Delay analysis 
     if any(k in q_lower for k in ['delay', 'travel time']):
-        max_delay = df['actual delay (mins)'].max()
-        min_delay = df['actual delay (mins)'].min()
-        avg_delay = df['actual delay (mins)'].mean()
+        max_delay = df['actual_delay'].max()
+        min_delay = df['actual_delay'].min()
+        avg_delay = df['actual_delay'].mean()
         return (
             f'**Traffic Delay Summary**  \n'
             f'- **Average Delay:** {avg_delay:.2f} minutes  \n'
@@ -373,9 +304,9 @@ def handle_traffic_query(q):
 
     # Speed analysis
     if any(k in q_lower for k in ['speed', 'velocity', 'pace']):
-        max_speed = df['speed(km/h)'].max()
-        min_speed = df['speed(km/h)'].min()
-        avg_speed = df['speed(km/h)'].mean()
+        max_speed = df['speed_kmh'].max()
+        min_speed = df['speed_kmh'].min()
+        avg_speed = df['speed_kmh'].mean()
         return (
             f'**Speed Summary**  \n'
             f'- **Average Speed:** {avg_speed:.1f} km/h  \n'
@@ -385,7 +316,7 @@ def handle_traffic_query(q):
 
     # Most congested routes
     if any(k in q_lower for k in ['busiest', 'most congested', 'worst traffic', 'highest congestion']):
-        busiest = df.groupby('route')['actual delay (mins)'].mean().nlargest(3)
+        busiest = df.groupby('route')['actual_delay'].mean().nlargest(3)
         formatted = '\n'.join([f'- **{route}**: {delay:.2f} min avg delay' for route, delay in busiest.items()])
         return (
             f'**Most Congested Routes**  \n'
@@ -416,6 +347,75 @@ def get_bot_response(query):
     # fallback: project or general
     context = retrieve_context(query)
     return query_llm(query, context)
+
+
+# --- Page Config & Style ---
+st.set_page_config(page_title='Banff Project Chatbot', page_icon='💬', layout='wide')
+display_banner()
+
+# --- Data and resource loading ---
+with st.spinner('Loading chatbot data...'):
+    try:
+        routes_df = fetch_routes_data()
+        parking_df = fetch_parking_vis_chatbot()
+    except Exception as e:
+        st.error(f'Could not load chatbot data: {e}')
+        st.stop()
+
+with st.spinner('Loading chatbot resources...'):
+    try: 
+        embedder, doc_embeddings = load_embeddings()
+        generator = load_generator()
+    except Exception as e:
+        st.error(f'Could not load chatbot resources: {e}')
+
+
+st.title('Banff Traffic Management Chatbot')
+st.write("""
+Ask questions about **traffic conditions**, **parking analytics**, or the **project itself**.  
+This chatbot blends **retrieval-augmented generation (RAG)** with **data-driven insights** to provide both factual and conceptual answers.
+""")
+
+# --- Example Queries ---
+# Show expanded only before first chat
+expanded_state = not st.session_state.get('messages')
+
+with st.expander("💡 Try asking questions like these:", expanded=expanded_state):
+    st.markdown("""
+    Ask about **parking**, **traffic**, or **project details** to explore insights powered by machine learning.
+    """)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        ### 🅿️ Parking Queries
+        - What is the average parking duration?  
+        - How many parking sessions were there on **2025-08-31**?  
+        - What is the average parking duration for **BANFF01**?  
+        - Which unit has the **longest average duration**?
+        """)
+
+    with col2:
+        st.markdown("""
+        ### 🚗 Traffic Queries
+        - What is the **average delay** across all routes?  
+        - What’s the **maximum speed** recorded on Route 3?  
+        - Show me the **delay trends** for November.  
+        - Which routes have the **highest congestion**?
+        """)
+
+    with col3:
+        st.markdown("""
+        ### 📊 Project & Model Queries
+        - How does the Banff Traffic Management project work?  
+        - What algorithms are used for prediction?  
+        - How do **SHAP values** explain congestion predictions?  
+        - How did the models perform?  
+        """)
+
+
+st.markdown('---')
 
 
 # --- Chat UI ---

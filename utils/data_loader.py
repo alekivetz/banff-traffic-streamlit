@@ -42,34 +42,24 @@ def fetch_parquet(file_id):
 
 # --- Load Datasets ---
 @st.cache_data(ttl=86400, show_spinner=False)
-def fetch_routes_data():
-    """Routes dataset for ML modeling."""
-    return fetch_parquet(st.secrets['ROUTES_WITH_LAGS_ID'])
-
-
-@st.cache_data(ttl=86400, show_spinner=False)
-def fetch_routes_vis_chatbot():
-    """Routes dataset shared by visualization dashboards and chatbot."""
-    df = fetch_parquet(st.secrets['ROUTES_VIS_ID'])
-    if not df.empty and 'calculation time' in df.columns:
-        df['calculation time'] = pd.to_datetime(df['calculation time'], errors='coerce')
-        df = df.dropna(subset=['calculation time'])
-        df['route'] = df['route'].astype(str)
-        df['hour'] = df['calculation time'].dt.hour
-        df['day_of_week'] = df['calculation time'].dt.day_name()
-        df['month'] = df['calculation time'].dt.strftime('%B')
-    return df
+def fetch_routes_data(for_models=False):
+    """Load routes dataset for ML models, visualization dashboards, and chatbot."""
+    df = fetch_parquet(st.secrets['ROUTES_DATA_ID'])
+    if for_models:
+        return df
+    else:
+        df = df.drop(columns=['month', 'day_of_week'], errors='ignore')
+        df['month'] = df['timestamp'].dt.strftime('%B')
+        df['day_of_week'] = df['timestamp'].dt.day_name()
+        cols_to_keep = ['route', 'timestamp', 'speed_kmh', 
+                        'mean_travel_time', 'actual_delay',
+                        'day_of_week', 'hour', 'month']
+        return df[cols_to_keep]
 
 @st.cache_data(ttl=86400, show_spinner=False)
-def fetch_parking_vis():
-    """Parking dataset for visual dashboards."""
-    return fetch_parquet(st.secrets['PARKING_VIS_ID'])
-
-
-@st.cache_data(ttl=86400, show_spinner=False)
-def fetch_parking_chatbot():
-    """Merged parking dataset for chatbot analysis."""
-    return fetch_parquet(st.secrets['PARKING_CHATBOT_ID'])
+def fetch_parking_vis_chatbot():
+    """Parking dataset for visual dashboards and chatbot."""
+    return fetch_parquet(st.secrets['PARKING_VIS_CHATBOT_ID'])
 
 
 # --- Model Loaders ---

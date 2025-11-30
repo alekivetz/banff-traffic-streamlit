@@ -13,18 +13,20 @@ from utils.display_images import display_image, display_banner
 from utils.route_info import ROUTE_DESCRIPTIONS
 from utils.data_loader import fetch_routes_data, fetch_classifier, fetch_regressors
 
-# --- Initialization ---
+
+# --- UI Setup ---
+st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')
+display_banner()
+
+# --- Load data and models ---
 with st.spinner('Loading route data and models...'):
     try:
-        df = fetch_routes_data()
+        df = fetch_routes_data(for_models=True)
         clf = fetch_classifier()
         regressors = fetch_regressors()
     except Exception as e:
         st.error(f'Could not load route data and models: {e}')
 
-# --- UI Setup ---
-st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')
-display_banner()
 
 # --- Header ---
 st.title('Banff Traffic Delay Predictor')

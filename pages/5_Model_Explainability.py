@@ -20,7 +20,7 @@ st.markdown('---')
 # --- LOAD DATA & MODELS ---
 with st.spinner('Loading data and models...'):
     try:
-        df = fetch_routes_data()
+        df = fetch_routes_data(for_models=True)
         clf = fetch_classifier()
         regressors = fetch_regressors()
         parking_model, unit_encoder, parking_df = load_parking_resources()
