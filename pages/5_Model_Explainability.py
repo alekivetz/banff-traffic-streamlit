@@ -199,7 +199,7 @@ An **XGBoost regressor** predicts parking occupancy and duration based on hourly
 - MAE: 0.969 hours  
 """)
 
-model, unit_encoder, parking_df = load_parking_resources()
+parking_model, unit_encoder, parking_df = load_parking_resources()
 
 numeric_cols = parking_df.select_dtypes(include=['number', 'bool']).columns.tolist()
 X_parking = parking_df[numeric_cols].dropna().tail(200)
