@@ -82,9 +82,13 @@ st.markdown("""
 # --- Initialization ----
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+try:
+    routes_df = fetch_routes_vis_chatbot()
+    parking_df = fetch_parking_chatbot()
+except Exception as e:
+    st.error(f'Could not load chatbot data: {e}')
+    st.stop()
 
-routes_df = fetch_routes_vis_chatbot()
-parking_df = fetch_parking_chatbot()
 
 # --- Context Documents ---
 project_overview = """
