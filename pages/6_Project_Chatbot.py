@@ -6,6 +6,7 @@ from datetime import datetime
 from sentence_transformers import SentenceTransformer, util
 from transformers import pipeline
 from utils.display_images import display_banner
+from utils.data_loader import fetch_routes_vis_chatbot, fetch_parking_chatbot
 
 # --- Page Config & Style ---
 st.set_page_config(page_title='Banff Project Chatbot', page_icon='💬', layout='wide')
@@ -82,8 +83,8 @@ st.markdown("""
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
-routes_df = st.session_state.routes_df_vis_chatbot
-parking_df = st.session_state.parking_df_chatbot
+routes_df = fetch_routes_vis_chatbot()
+parking_df = fetch_parking_chatbot()
 
 # --- Context Documents ---
 project_overview = """

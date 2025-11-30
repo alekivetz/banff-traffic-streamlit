@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import io
 
 from utils.display_images import display_banner
-from utils.data_loader import download_from_drive
+from utils.data_loader import fetch_routes_vis_chatbot
 
 # --- Page Config ---
 st.set_page_config(page_title='Banff Traffic Analysis', page_icon='📈', layout='wide')
@@ -55,7 +55,7 @@ with f3:
 st.markdown('---')
 
 # --- Load data ---
-df = st.session_state.routes_df_vis_chatbot
+df = fetch_routes_vis_chatbot()
 
 # --- Apply Filters ---
 filtered_df = df[

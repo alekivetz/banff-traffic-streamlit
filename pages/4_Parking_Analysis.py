@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
-from utils.data_loader import download_from_drive
+from utils.data_loader import fetch_parking_vis
 
 
 # --- UI ---
@@ -24,7 +24,7 @@ peak usage periods throughout the year.
 st.markdown('---')
 
 # --- Initialization ---
-df = st.session_state.parking_df_vis
+df = fetch_parking_vis()
 
 # --- Filters ---
 st.subheader('Filter Options')

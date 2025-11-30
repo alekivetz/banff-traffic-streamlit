@@ -6,12 +6,10 @@ import shap
 import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
-from utils.data_loader import init_app_state
+from utils.data_loader import load_parking_resources
 
 # --- Initialization ---
-model = st.session_state.parking_model
-unit_encoder = st.session_state.parking_encoder
-features_df = st.session_state.parking_df_model
+model, unit_encoder, features_df = load_parking_resources()
 
 # --- UI Setup ---
 st.set_page_config(page_title='Parking Availability Predictor', page_icon='⏱️', layout='wide')

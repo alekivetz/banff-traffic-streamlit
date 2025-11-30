@@ -42,7 +42,7 @@ def fetch_parquet(file_id):
 
 # --- Load Datasets ---
 @st.cache_data(ttl=86400, show_spinner=False)
-def fetch_routes_model():
+def fetch_routes_data():
     """Routes dataset for ML modeling."""
     return fetch_parquet(st.secrets['ROUTES_WITH_LAGS_ID'])
 
@@ -105,46 +105,3 @@ def load_parking_resources():
     except Exception as e:
         st.warning(f'Failed to load parking resources: {e}')
         return None, None, pd.DataFrame()
-
-
-@st.cache_resource(show_spinner=False)
-def preload_all_resources():
-    """Load all data and models once per session."""
-    data = {}
-
-    # ROUTE DATA
-    data['routes_df_model'] = fetch_routes_model()
-    data['routes_df_vis_chatbot'] = fetch_routes_vis_chatbot()
-
-    # MODELS
-    data['classifier'] = fetch_classifier()
-    data['regressors'] = fetch_regressors()
-
-    # PARKING DATA
-    data['parking_df_vis'] = fetch_parking_vis()
-    data['parking_df_chatbot'] = fetch_parking_chatbot()
-
-    # PARKING MODEL + ENCODER
-    model, encoder, df = load_parking_resources()
-    data['parking_model'] = model
-    data['parking_encoder'] = encoder
-    data['parking_df_model'] = df
-
-    return data
-
-
-def init_app_state():
-    """Preload everything once; store in session_state for fast access."""
-    if st.session_state.get('app_initialized', False):
-        return
-
-    with st.spinner('Initializing Banff Traffic Management resources...'):
-        all_data = preload_all_resources()
-
-        for key, value in all_data.items():
-            st.session_state[key] = value
-
-        st.session_state.app_initialized = True
-
-    st.success('All datasets and models loaded successfully!')
-

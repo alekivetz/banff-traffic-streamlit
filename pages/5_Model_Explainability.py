@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from utils.display_images import display_banner
+from utils.data_loader import fetch_routes_data, fetch_classifier, fetch_regressors, load_parking_resources
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title='Model Explainability', page_icon='🧠', layout='wide')
@@ -17,9 +18,9 @@ This page illustrates **how each machine learning model makes its predictions** 
 st.markdown('---')
 
 # --- LOAD DATA & MODELS ---
-df = st.session_state.routes_df_model
-clf = st.session_state.classifier
-regressors = st.session_state.regressors
+df = fetch_routes_data()
+clf = fetch_classifier()
+regressors = fetch_regressors()
 
 # --- HELPER FUNCTIONS ---
 def compute_shap_light(model, X):
@@ -198,8 +199,7 @@ An **XGBoost regressor** predicts parking occupancy and duration based on hourly
 - MAE: 0.969 hours  
 """)
 
-parking_model = st.session_state.parking_model
-parking_df = st.session_state.parking_df_model
+model, unit_encoder, parking_df = load_parking_resources()
 
 numeric_cols = parking_df.select_dtypes(include=['number', 'bool']).columns.tolist()
 X_parking = parking_df[numeric_cols].dropna().tail(200)

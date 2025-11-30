@@ -11,13 +11,12 @@ import numpy as np
 
 from utils.display_images import display_image, display_banner
 from utils.route_info import ROUTE_DESCRIPTIONS
-from utils.data_loader import init_app_state
+from utils.data_loader import fetch_routes_data, fetch_classifier, fetch_regressors
 
 # --- Initialization ---
-df = st.session_state.routes_df_model
-clf = st.session_state.classifier
-regressors = st.session_state.regressors
-
+df = fetch_routes_data()
+clf = fetch_classifier()
+regressors = fetch_regressors()
 
 # --- UI Setup ---
 st.set_page_config(page_title='Banff Delay Predictor', page_icon='⏱️', layout='wide')
