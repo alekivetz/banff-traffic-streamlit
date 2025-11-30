@@ -20,26 +20,39 @@ This chatbot blends **retrieval-augmented generation (RAG)** with **data-driven 
 # Show expanded only before first chat
 expanded_state = not st.session_state.get('messages')
 
-with st.expander("Try asking questions like these:", expanded=expanded_state):
+with st.expander("💡 Try asking questions like these:", expanded=expanded_state):
     st.markdown("""
-    **Parking Queries**
-    - What is the average parking duration?  
-    - How many parking sessions were there on 2025-08-31?  
-    - What is the average parking duration for BANFF01?  
-    - Which unit has the longest average duration?
-
-    **Traffic Queries**
-    - What is the average delay across all routes?  
-    - What’s the maximum speed recorded on Route 3?  
-    - Show me the delay trends for November.  
-    - Which routes have the highest congestion?
-
-    **Project & Model Queries**
-    - How does the Banff Traffic Management model work?  
-    - What algorithms are used for prediction?  
-    - How do SHAP values explain congestion predictions?  
-     - What factors influence parking demand the most?
+    Ask about **parking**, **traffic**, or **project details** to explore insights powered by machine learning.
     """)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        ### 🅿️ Parking Queries
+        - What is the average parking duration?  
+        - How many parking sessions were there on **2025-08-31**?  
+        - What is the average parking duration for **BANFF01**?  
+        - Which unit has the **longest average duration**?
+        """)
+
+    with col2:
+        st.markdown("""
+        ### 🚗 Traffic Queries
+        - What is the **average delay** across all routes?  
+        - What’s the **maximum speed** recorded on Route 3?  
+        - Show me the **delay trends** for November.  
+        - Which routes have the **highest congestion**?
+        """)
+
+    with col3:
+        st.markdown("""
+        ### 📊 Project & Model Queries
+        - How does the Banff Traffic Management project work?  
+        - What algorithms are used for prediction?  
+        - How do **SHAP values** explain congestion predictions?  
+        - How did the models perform?  
+        """)
 
 
 st.markdown('---')
@@ -64,6 +77,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # --- Initialization ----
 if 'messages' not in st.session_state:
     st.session_state.messages = []
@@ -73,44 +87,79 @@ parking_df = st.session_state.parking_df_chatbot
 
 # --- Context Documents ---
 project_overview = """
-The Banff Traffic Management project supports smarter mobility in Banff National Park.
-It predicts route-level congestion and parking occupancy 60 minutes ahead,
-using Random Forest and XGBoost models trained on time-series and weather data.
+The Banff Traffic Management project supports smarter mobility within the town of Banff.
+It predicts overall and route-level traffic congestion and parking occupancy, using Random Forest and XGBoost models trained on historical traffic and parking data.
+The system is designed to help park planners anticipate congestion, manage parking demand, and support sustainable tourism.
 """
 
 model_explainability = """
-Model explainability relies on SHAP values to identify the most influential
-temporal, spatial, and behavioral factors contributing to congestion and parking demand.
+SHAP values are used to explain how the traffic forecasting models predict congestion across Banff’s routes.
+They measure how much each feature — such as travel speed, time of day, or recent delay trends — contributes to the model’s final prediction.
+By visualizing these effects, stakeholders can see whether high delays are driven by peak hours, slow speeds, or route-specific factors.
+This transparency builds trust in the model and supports data-driven decision making for congestion management.
 """
 
-parking_analysis = """
-The Parking Analysis dashboard visualizes occupancy, duration, and revenue trends.
-Forecasts use 15-minute intervals of historical data merged with weather and event indicators.
+model_explainability = """
+Model explainability uses SHAP values to interpret how machine learning models make predictions.
+They quantify how much each feature contributes to the model’s final prediction.
+By analyzing feature importance, it identifies the most influential factors driving congestion and parking demand.
+This helps stakeholders understand *why* a prediction was made, improving transparency and trust in the system.
+"""
+
+traffic_forecaster = """
+The Traffic Forecasting component predicts overall congestion risk and route-specific delay durations.
+Forecasters are generated using Random Forest regressors and classifiers trained on historical data and lagged features. 
+"""
+
+parking_forecaster = """
+The Parking Forecasting component tracks occupancy, duration, and revenue trends across Banff parking facilities.
+Forecasts are generated in 15-minute intervals using historical transaction data and seasonal patterns.
+Insights from this analysis help identify high-demand periods, optimize parking availability, and inform sustainable transportation planning.
 """
 
 model_performance = """
-The Banff Traffic Management project evaluates model performance for both traffic and parking prediction tasks.
+**Traffic Forecasting**\n
+Per-route Random Forest regressors achieved:
+• **R²:** 0.93  
+• **MAE:** 0.004 minutes  
+• **RMSE:** 0.235 minutes  
 
-For **traffic congestion forecasting**, Random Forest and XGBoost regressors were trained per route using time-based, spatial, and weather-related features.  
-Average performance across all routes:
-- R²: 0.93  
-- MAE: 0.12 minutes  
-- RMSE: 0.31 minutes  
+---
 
-Top-performing routes include Route 1, Route 3, and Route 12, all with R² values above 0.98.  
-More variable routes, such as Route 5 and Route 11, show higher error due to irregular traffic patterns.
+**Congestion Classification**  
+A Random Forest classifier categorized congestion into *Low*, *Medium*, and *High* classes.  
 
-For **parking demand forecasting**, an ensemble regression model was trained using parking duration, weather, and time-of-day features.  
-Results:
-- R²: 0.95
-- MAE: 0.969
+**Performance metrics:**  
+• **Accuracy:** 0.70  
+• **Macro Recall:** 0.52  
+• **Weighted F1-Score:** 0.79  
+
+The model performs best for low-congestion routes and captures high congestion with **65% recall**.
+
+---
+
+**Parking Forecasting**  
+An XGBoost regression model predicted parking occupancy and duration.  
+
+**Results:**  
+• **R²:** 0.95  
+• **MAE:** 0.97 hours   
+"""
+
+
+data_sources = """
+This project uses historical traffic and parking data from the town of Banff's traffic sensors and parking systems.
+Route datasets include information on timestamps, travel speeds, and delays.
+Parking datasets include unit IDs, payment information, and parking start/end timestamps. 
 """
 
 documents = {
     'overview': project_overview,
     'explainability': model_explainability,
-    'parking': parking_analysis,
+    'parking': parking_forecaster,
+    'traffic': traffic_forecaster,
     'performance': model_performance,
+    'data': data_sources
 }
 
 # --- Embeddings + Generator (RAG) ---
@@ -122,16 +171,18 @@ def load_embeddings():
 
 @st.cache_resource
 def load_generator():
-    return pipeline('text2text-generation', model='google/flan-t5-small')
+    return pipeline('text2text-generation', model='google/flan-t5-base', device='mps')
 
 embedder, doc_embeddings = load_embeddings()
 generator = load_generator()
 
 def retrieve_context(query, top_k=2):
+    q_lower = query.lower()
+    
     query_emb = embedder.encode(query, convert_to_tensor=True)
     scores = {k: util.pytorch_cos_sim(query_emb, emb).item() for k, emb in doc_embeddings.items()}
     top_docs = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
-    return '\n\n'.join(documents[d] for d, _ in top_docs)
+    return '\n\n---\n\n'.join(f'{d.upper()} SECTION:\n{documents[d]}' for d, _ in top_docs)
 
 # --- Intent Matching ---
 @st.cache_resource
@@ -173,6 +224,16 @@ INTENTS = {
         'shap values',
         'feature importance'
     ],
+    'models': [
+        'model performance', 
+        'how did the models perform', 
+        'metrics', 
+        'performance metrics',
+        'results summary', 
+        'forecasting results', 
+        'performance summary', 
+        'model results'
+    ]
 }
 
 # Encode all examples once
@@ -193,10 +254,26 @@ def detect_intent(query):
 def query_llm(query, context):
     prompt = (
         'You are a helpful assistant for the Banff Traffic Management project.\n\n'
-        f'Context:\n{context}\n\nUser Query: {query}\n\nAnswer:'
+        'Always return answers using **Markdown formatting** - with clear section headers, bullet points, and line breaks. '
+        'Do NOT merge multiple sections into one paragraph; preserve all newlines.\n\n'
+        f'Context:\n{context}\n\n'
+        f'User Query: {query}\n\n'
+        'Answer (in Markdown):'
     )
-    output = generator(prompt, max_new_tokens=180, do_sample=True, temperature=0.7)
-    return output[0]['generated_text'].replace(prompt, '').strip()
+
+    output = generator(
+        prompt,
+        max_new_tokens=400,
+        do_sample=False,
+        temperature=0.7,
+        truncation=True
+    )
+
+    # Extract the generated text and preserve formatting
+    reply = output[0]['generated_text'].strip()
+    reply = reply.replace('\\n', '\n').replace('  ', ' ')
+    return reply
+
 
 # --- Rule-Based Data Queries ---
 def extract_iso_date(query):
@@ -263,14 +340,17 @@ def handle_traffic_query(q):
     q_lower = q.lower()
 
     # Delay analysis 
-    if any(k in q_lower for k in ['delay', 'travel time', 'congestion']):
+    if any(k in q_lower for k in ['delay', 'travel time']):
         max_delay = df['actual delay (mins)'].max()
         min_delay = df['actual delay (mins)'].min()
         avg_delay = df['actual delay (mins)'].mean()
         return (
-            f'Average delay: {avg_delay:.2f} min\n'
-            f'Max delay: {max_delay:.2f} min | Min delay: {min_delay:.2f} min.'
+            f'**Traffic Delay Summary**  \n'
+            f'- **Average Delay:** {avg_delay:.2f} minutes  \n'
+            f'- **Maximum Delay:** {max_delay:.2f} minutes  \n'
+            f'- **Minimum Delay:** {min_delay:.2f} minutes'
         )
+
 
     # Speed analysis
     if any(k in q_lower for k in ['speed', 'velocity', 'pace']):
@@ -278,15 +358,20 @@ def handle_traffic_query(q):
         min_speed = df['speed(km/h)'].min()
         avg_speed = df['speed(km/h)'].mean()
         return (
-            f'Average speed: {avg_speed:.1f} km/h\n'
-            f'Highest: {max_speed:.1f} km/h | Lowest: {min_speed:.1f} km/h.'
+            f'**Speed Summary**  \n'
+            f'- **Average Speed:** {avg_speed:.1f} km/h  \n'
+            f'- **Highest Speed:** {max_speed:.1f} km/h  \n'
+            f'- **Lowest Speed:** {min_speed:.1f} km/h'
         )
-    
-    # Most congested routes
-    if any(k in q_lower for k in ['busiest', 'most congested', 'worst traffic']):
-        busiest = df.groupby('route')['actual delay (mins)'].mean().nlargest(3).index.tolist()
-        return f'The most congested routes are typically {", ".join(busiest)}.'
 
+    # Most congested routes
+    if any(k in q_lower for k in ['busiest', 'most congested', 'worst traffic', 'highest congestion']):
+        busiest = df.groupby('route')['actual delay (mins)'].mean().nlargest(3)
+        formatted = '\n'.join([f'- **{route}**: {delay:.2f} min avg delay' for route, delay in busiest.items()])
+        return (
+            f'**Most Congested Routes**  \n'
+            f'{formatted}'
+        )
 
 
     return None
@@ -306,6 +391,9 @@ def get_bot_response(query):
         if resp:
             return resp
 
+    if intent == 'models':
+        return model_performance
+    
     # fallback: project or general
     context = retrieve_context(query)
     return query_llm(query, context)
@@ -327,6 +415,6 @@ if prompt := st.chat_input('Ask me about Banff traffic, parking, or our Banff Tr
     with st.chat_message('assistant'):
         with st.spinner('Analyzing your question...'):
             reply = get_bot_response(prompt)
-            st.markdown(reply)
+            st.markdown(reply, unsafe_allow_html=True)
 
     st.session_state.messages.append({'role': 'assistant', 'content': reply})

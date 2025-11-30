@@ -13,9 +13,9 @@ st.set_page_config(page_title='Model Explainability', page_icon='🧠', layout='
 display_banner()
 
 st.title('Model Explainability')
-st.write('''
+st.write("""
 This page illustrates **how each machine learning model makes its predictions** by highlighting the most influential temporal, spatial, and behavioral factors driving congestion and parking demand across Banff.
-''')
+""")
 
 st.markdown('---')
 
@@ -53,6 +53,28 @@ def compute_shap(model, X):
 
 # --- GLOBAL CLASSIFIER ---
 st.header('1. Global Delay Classifier')
+st.markdown("""
+A **Random Forest classifier** was trained to categorize congestion levels into three classes:
+**0 = Low**, **1 = Medium**, and **2 = High**, based on features such as average speed,
+delay trends, and temporal indicators.
+
+**Evaluation results (macro averages):**
+- Accuracy: 0.70  
+- Precision: 0.37  
+- Recall: 0.52  
+- F1-Score: 0.34  
+
+| Class | Precision | Recall | F1-Score | Support |
+|:------|:-----------|:--------|:----------|:---------|
+| Low (0) | 0.97 | 0.73 | 0.84 | 722 332 |
+| Medium (1) | 0.12 | 0.17 | 0.14 | 48 807 |
+| High (2) | 0.02 | 0.65 | 0.04 | 5 661 |
+
+The classifier performs very well for **low-congestion** conditions (97 % precision),
+while **medium and high** classes suffer from imbalance and limited data coverage.
+Despite that, the model successfully captures the onset of heavier congestion,
+achieving **65 % recall** for the high-delay class.  
+""")
 
 expected_cols = ['route', 'season', 'hour', 'day_of_week', 'is_weekend', 'month']
 clf_sample = df.copy()
@@ -113,9 +135,17 @@ st.markdown('---')
 
 # --- PER-ROUTE REGRESSORS ---
 st.header('2. Per-Route Delay Regressors')
-st.write('''
-    This model predicts **short-term route-level delays** by learning how real-time speed and travel time trends relate to congestion buildup.
-''')
+st.markdown("""
+For continuous congestion forecasting, per-route **Random Forest regressors** were trained
+using time-based, spatial, and lagged travel features.
+
+**Average performance across all routes:**
+- R²: 0.93  
+- MAE: 0.004 minutes  
+- RMSE: 0.235 minutes  
+
+""")
+
 
 # --- Route selector ---
 available_routes = sorted(regressors.keys(), key=lambda x: int(x.split()[-1]))
@@ -189,9 +219,16 @@ st.markdown('---')
 
     # --- PARKING DEMAND REGRESSOR ---
 st.header('3. Parking Availability Regressor')
-st.write('''
+st.markdown("""
 This model predicts **parking occupancy and demand trends** by analyzing recent occupancy patterns and time-based variables.
-''')
+            
+For **parking occupancy and duration prediction**, an **XGBoost regression model** was trained
+using hourly transaction data, time-of-day, and seasonal factors.
+
+**Performance:**
+- R²: 0.95  
+- MAE: 0.969 hours  
+         """)
 
 parking_model = st.session_state.parking_model
 parking_df = st.session_state.parking_df_model
