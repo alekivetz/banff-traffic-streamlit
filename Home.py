@@ -1,7 +1,6 @@
 import streamlit as st
 from google.oauth2 import service_account
 from utils.display_images import display_banner
-from utils.data_loader import init_app_state
 
 def main():
     st.set_page_config(
