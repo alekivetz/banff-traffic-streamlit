@@ -222,5 +222,6 @@ with col2:
 st.markdown('---')
 st.caption("""
 Data Source: Banff Traffic Management Project (2025)  
+           
 Created by Alpine Analysts · NorQuest College MLAD · Fall 2025
 """)
