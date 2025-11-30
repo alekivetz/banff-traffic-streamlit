@@ -57,6 +57,7 @@ def main():
     | **3. Parking Availability Predictor** | Predicts parking lot occupancy 60 minutes into the future using an XGBoost regression model trained on 15-minute intervals. |
     | **4. Parking Analysis Dashboard** | Aggregates parking session data to visualize sessions, revenue, duration, and demand by time and location. |
     | **5. Model Explainability** | Displays SHAP-based feature importance and interpretable plots to explain which temporal, spatial, and behavioral factors most influence model predictions. |
+    | **6. Project Chatbot** | Retrieval-augmented assistant that answers questions about Banff traffic, parking analytics, and model performance in natural language. |
     """)
 
     st.markdown('---')

@@ -14,8 +14,9 @@ def main():
     display_banner()
 
     # --- Initialize app state once ---
-    init_app_state()
-    st.session_state.initialized = True
+    if 'initialized' not in st.session_state:  
+        init_app_state()
+        st.session_state.initialized = True
 
     # --- Header ---
     st.title('Alpine Analysts: Banff Traffic Management')
@@ -35,6 +36,7 @@ def main():
     * **Parking Availability Predictor** – Predicts parking lot occupancy 60 minutes ahead.
     * **Parking Analysis Dashboard** – Provides interactive visual analytics for parking sessions, revenue, and activity trends.
     * **Model Explainability** – Highlights which features most influenced each model’s predictions using SHAP values and importance rankings.
+    * **Project Chatbot** – A retrieval-augmented assistant that answers questions about Banff traffic, parking, model performance, and project methodology in natural language.  
     * **About the Project** – Learn about data sources, modeling approach, and the Alpine Analysts team.
     """)
 
