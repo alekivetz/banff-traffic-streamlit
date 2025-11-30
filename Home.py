@@ -12,11 +12,6 @@ def main():
     # --- Banner ---
     display_banner()
 
-    # --- Initialize app state once ---
-    if 'initialized' not in st.session_state:  
-        init_app_state()
-        st.session_state.initialized = True
-
     # --- Header ---
     st.title('Alpine Analysts: Banff Traffic Management')
     st.write("""
