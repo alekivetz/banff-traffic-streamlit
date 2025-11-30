@@ -27,13 +27,27 @@ def compute_shap_light(model, X, sample_n=100):
     X_sample = X.sample(min(sample_n, len(X)), random_state=42)
     explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent', approximate=True)
     shap_values = explainer(X_sample, check_additivity=False)
-    mean_abs = np.abs(shap_values.values).mean(axis=0)
+
+    # Always flatten multi-dimensional SHAP outputs
+    shap_array = np.abs(shap_values.values)
+    if shap_array.ndim > 2:
+        shap_array = shap_array.mean(axis=2)
+    if shap_array.ndim > 1:
+        mean_abs = shap_array.mean(axis=0)
+    else:
+        mean_abs = shap_array  # already 1D
+
     shap_df = (
-        pd.DataFrame({'Feature': X_sample.columns, 'Mean |SHAP value|': mean_abs})
+        pd.DataFrame({
+            'Feature': X_sample.columns,
+            'Mean |SHAP value|': mean_abs.flatten()
+        })
         .sort_values('Mean |SHAP value|', ascending=False)
         .reset_index(drop=True)
     )
+
     return shap_values, shap_df, X_sample
+
 
 def plot_shap_summary(values, X):
     fig, _ = plt.subplots(figsize=(7, 4))
