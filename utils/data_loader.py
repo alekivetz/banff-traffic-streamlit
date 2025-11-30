@@ -107,28 +107,44 @@ def load_parking_resources():
         return None, None, pd.DataFrame()
 
 
-# --- App Initialization ---
+@st.cache_resource(show_spinner=False)
+def preload_all_resources():
+    """Load all data and models once per session."""
+    data = {}
+
+    # ROUTE DATA
+    data['routes_df_model'] = fetch_routes_model()
+    data['routes_df_vis_chatbot'] = fetch_routes_vis_chatbot()
+
+    # MODELS
+    data['classifier'] = fetch_classifier()
+    data['regressors'] = fetch_regressors()
+
+    # PARKING DATA
+    data['parking_df_vis'] = fetch_parking_vis()
+    data['parking_df_chatbot'] = fetch_parking_chatbot()
+
+    # PARKING MODEL + ENCODER
+    model, encoder, df = load_parking_resources()
+    data['parking_model'] = model
+    data['parking_encoder'] = encoder
+    data['parking_df_model'] = df
+
+    return data
+
+
 def init_app_state():
-    """Initialize and store data/models in session_state."""
-    with st.spinner('Initializing Banff Traffic Management project...'):
-        # ROUTES DATASETS
-        st.session_state.routes_df_model = st.session_state.get('routes_df_model') or fetch_routes_model()
-        st.session_state.routes_df_vis_chatbot = (
-            st.session_state.get('routes_df_vis_chatbot') or fetch_routes_vis_chatbot()
-        )
-        # ROUTES MODELS
-        st.session_state.classifier = st.session_state.get('classifier') or fetch_classifier()
-        st.session_state.regressors = st.session_state.get('regressors') or fetch_regressors()  
+    """Preload everything once; store in session_state for fast access."""
+    if st.session_state.get('app_initialized', False):
+        return
 
-        # PARKING DATASETS
-        st.session_state.parking_df_vis = st.session_state.get('parking_df_vis') or fetch_parking_vis()
-        st.session_state.parking_df_chatbot = st.session_state.get('parking_df_chatbot') or fetch_parking_chatbot()
+    with st.spinner('Initializing Banff Traffic Management resources...'):
+        all_data = preload_all_resources()
 
-        # PARKING MODEL + ENCODER
-        if 'parking_df_model' not in st.session_state:
-            model, encoder, df = load_parking_resources()
-            st.session_state.parking_model = model
-            st.session_state.parking_encoder = encoder
-            st.session_state.parking_df_model = df
+        for key, value in all_data.items():
+            st.session_state[key] = value
+
+        st.session_state.app_initialized = True
 
     st.success('All datasets and models loaded successfully!')
+
