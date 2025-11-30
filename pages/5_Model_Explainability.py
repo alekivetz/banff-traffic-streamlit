@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 from utils.display_images import display_banner
-from utils.data_loader import init_app_state
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title='Model Explainability', page_icon='🧠', layout='wide')
@@ -23,31 +22,55 @@ clf = st.session_state.classifier
 regressors = st.session_state.regressors
 
 # --- HELPER FUNCTIONS ---
-def compute_shap_light(model, X, sample_n=100):
-    X_sample = X.sample(min(sample_n, len(X)), random_state=42)
-    explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent', approximate=True)
+def compute_shap_light(model, X):
+    """Compute lightweight SHAP values + model feature importances, safely cached."""
+    # Random subsample to keep memory low
+    X_sample = X.sample(min(50, len(X)), random_state=42)
+
+    # Try TreeExplainer, fallback to generic
+    try:
+        explainer = shap.TreeExplainer(
+            model,
+            feature_perturbation='tree_path_dependent',
+            approximate=True
+        )
+    except Exception:
+        explainer = shap.Explainer(model)
+
     shap_values = explainer(X_sample, check_additivity=False)
+    shap_arr = np.abs(np.array(shap_values.values, dtype=float))
 
-    # Always flatten multi-dimensional SHAP outputs
-    shap_array = np.abs(shap_values.values)
-    if shap_array.ndim > 2:
-        shap_array = shap_array.mean(axis=2)
-    if shap_array.ndim > 1:
-        mean_abs = shap_array.mean(axis=0)
+    # Reduce all dimensions safely → 1D per feature
+    while shap_arr.ndim > 2:
+        shap_arr = shap_arr.mean(axis=-1)
+    if shap_arr.ndim == 2:
+        mean_abs = shap_arr.mean(axis=0)
     else:
-        mean_abs = shap_array  # already 1D
+        mean_abs = shap_arr.flatten()
 
-    shap_df = (
-        pd.DataFrame({
-            'Feature': X_sample.columns,
-            'Mean |SHAP value|': mean_abs.flatten()
+    mean_abs = mean_abs[: len(X_sample.columns)]
+
+    # --- Create SHAP dataframe
+    shap_df = pd.DataFrame({
+        'Feature': X_sample.columns,
+        'Mean |SHAP value|': mean_abs
+    })
+
+    # --- Add model feature importances if available
+    if hasattr(model, 'feature_importances_'):
+        feats = getattr(model, 'feature_names_in_', X_sample.columns)
+        imp_df = pd.DataFrame({
+            'Feature': feats,
+            'Model Importance': model.feature_importances_[:len(feats)]
         })
-        .sort_values('Mean |SHAP value|', ascending=False)
-        .reset_index(drop=True)
-    )
+        shap_df = shap_df.merge(imp_df, on='Feature', how='left')
 
+    shap_df = shap_df.sort_values('Mean |SHAP value|', ascending=False).reset_index(drop=True)
+
+
+    # Free memory 
+    del shap_arr
     return shap_values, shap_df, X_sample
-
 
 def plot_shap_summary(values, X):
     fig, _ = plt.subplots(figsize=(7, 4))
@@ -96,7 +119,7 @@ else:
     model = clf
     X_df = clf_sample.select_dtypes(include=['number', 'bool'])
 
-shap_values, shap_df, X_used = compute_shap_light(model, X_df, sample_n=200)
+shap_values, shap_df, X_used = compute_shap_light(model, X_df)
 
 col1, col2 = st.columns([2, 1])
 with col1:
@@ -136,7 +159,7 @@ for route, model in regressors.items():
     else:
         X_aligned = route_df.copy()
 
-    shap_values, shap_df, X_used = compute_shap_light(model, X_aligned, sample_n=80)
+    shap_values, shap_df, X_used = compute_shap_light(model, X_aligned)
     shap_df['route'] = route
     all_shap_tables.append(shap_df)
     all_shap_values.append(np.abs(shap_values.values))
@@ -145,8 +168,7 @@ for route, model in regressors.items():
 if all_shap_tables:
     combined_shap = (
         pd.concat(all_shap_tables)
-        .groupby('Feature', as_index=False)['Mean |SHAP value|']
-        .mean()
+        .groupby('Feature', as_index=False)[['Mean |SHAP value|', 'Model Importance']]        .mean()
         .sort_values('Mean |SHAP value|', ascending=False)
         .reset_index(drop=True)
     )
@@ -184,7 +206,7 @@ X_parking = parking_df[numeric_cols].dropna().tail(200)
 if hasattr(parking_model, 'feature_names_in_'):
     X_parking = X_parking.reindex(columns=parking_model.feature_names_in_, fill_value=0)
 
-p_shap, p_shap_df, X_used = compute_shap_light(parking_model, X_parking, sample_n=150)
+p_shap, p_shap_df, X_used = compute_shap_light(parking_model, X_parking)
 
 col1, col2 = st.columns([2, 1])
 with col1:
