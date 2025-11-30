@@ -2,6 +2,8 @@ import re
 import streamlit as st
 import pandas as pd
 import numpy as np
+from transformers import pipeline
+import torch
 from datetime import datetime
 from sentence_transformers import SentenceTransformer, util
 from transformers import pipeline
@@ -178,7 +180,13 @@ def load_embeddings():
 
 @st.cache_resource
 def load_generator():
-    return pipeline('text2text-generation', model='google/flan-t5-small')
+    """Load lightweight FLAN-T5 generator safely across environments."""
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    return pipeline(
+        'text2text-generation',
+        model='google/flan-t5-small',
+        device=0 if device == 'cuda' else -1
+    )
 
 with st.spinner('Loading chatbot resources...'):
     try: 
