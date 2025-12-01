@@ -267,8 +267,10 @@ def handle_parking_query(q):
     # Longest average duration (unit/lot synonyms)
     if any(k in q_lower for k in ['unit', 'lot', 'location', 'parkade', 'parking lot']) and \
        any(k in q_lower for k in ['longest', 'longer', 'highest', 'most time']):
-        grouped = df.groupby('Unit')['duration'].agg(['mean', 'count']).reset_index()
+        df['duration_hours'] = df['duration'] / 60
+        grouped = df.groupby('Unit')['duration_hours'].agg(['mean', 'count']).reset_index()
         row = grouped.loc[grouped['mean'].idxmax()]
+        
         return (
             f'The parking lot with the longest average duration is **{row["Unit"]}**, '
             f'with an average stay of {row["mean"]:.2f} hours.'
