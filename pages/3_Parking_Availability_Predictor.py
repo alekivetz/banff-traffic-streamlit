@@ -1,9 +1,5 @@
 import streamlit as st
 import pandas as pd
-import joblib
-import io
-import shap
-import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
 from utils.data_loader import load_parking_resources

@@ -9,6 +9,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
 
 # --- Connect to Google Drive ---
+@st.cache_resource
 def connect_drive():
     """Authenticate with Google Drive using the service account."""
     creds = service_account.Credentials.from_service_account_info(
@@ -62,7 +63,7 @@ def fetch_parking_vis_chatbot():
     return fetch_parquet(st.secrets['PARKING_VIS_CHATBOT_ID'])
 
 
-# --- Model Loaders ---
+# # --- Model Loaders ---
 @st.cache_resource(show_spinner=False)
 def fetch_classifier():
     file_id = st.secrets['CLASSIFIER_MODEL_ID']
@@ -71,18 +72,31 @@ def fetch_classifier():
 
 
 @st.cache_resource(show_spinner=False)
-def fetch_regressors():
+def fetch_single_regressor(route: str):
+    """Load only one route-specific regressor model."""
     route_dict = json.loads(st.secrets['ROUTE_MODELS_IDS'])
-    models = {}
+    if route not in route_dict:
+        raise ValueError(f"No model ID found for route: {route}")
+    file_id = route_dict[route]
+    model_bytes = download_from_drive(file_id)
+    return joblib.load(io.BytesIO(model_bytes))
+
+@st.cache_resource(show_spinner=False)
+def fetch_regressors():
+    """
+    Load ALL per-route regressors from Google Drive into memory.
+    """
+    route_dict = json.loads(st.secrets['ROUTE_MODELS_IDS'])
+    regressors = {}
+
     for route, file_id in route_dict.items():
         try:
             model_bytes = download_from_drive(file_id)
-            model = joblib.load(io.BytesIO(model_bytes))
-            models[route] = model
+            regressors[route] = joblib.load(io.BytesIO(model_bytes))
         except Exception as e:
-            st.warning(f'Could not load model for {route}: {e}')
-    return models
+            st.warning(f"Could not load model for {route}: {e}")
 
+    return regressors
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def load_parking_resources():
@@ -95,3 +109,4 @@ def load_parking_resources():
     except Exception as e:
         st.warning(f'Failed to load parking resources: {e}')
         return None, None, pd.DataFrame()
+

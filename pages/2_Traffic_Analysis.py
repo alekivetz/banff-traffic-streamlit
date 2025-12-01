@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import numpy as np
-from datetime import datetime, timedelta
-import io
+from datetime import datetime
 
 from utils.display_images import display_banner
 from utils.data_loader import fetch_routes_data

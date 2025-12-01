@@ -1,12 +1,36 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import io
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 from utils.display_images import display_banner
 from utils.data_loader import fetch_parking_vis_chatbot
+
+
+# Helper function to cache pre-aggregated summaries
+@st.cache_data(ttl=3600)
+def summarize_parking(df: pd.DataFrame):
+    """Return pre-aggregated summaries to speed up Plotly charts."""
+    weekday_order = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    month_order = ['January','February','March','April','May','June','July',
+                   'August','September','October','November','December']
+
+    monthly_sessions = df.groupby('month').size().reset_index(name='sessions')
+    dow_sessions = df.groupby('day_of_week').size().reset_index(name='sessions')
+    dow_sessions['day_of_week'] = pd.Categorical(dow_sessions['day_of_week'],
+                                                 categories=weekday_order, ordered=True)
+    monthly_revenue = df.groupby('month')['Amount'].sum().reset_index()
+    monthly_revenue['month'] = pd.Categorical(monthly_revenue['month'],
+                                              categories=month_order, ordered=True)
+    busiest_units = (df['Unit'].value_counts()
+                     .reset_index(name='count')
+                     .rename(columns={'index': 'Unit'}))
+    pivot_df = df[df['duration'] != 'NO'].copy()
+    pivot_df['duration'] = pivot_df['duration'].astype(float)
+    heat_df = (pivot_df.groupby(['day_of_week','hour']).size()
+               .reset_index(name='sessions'))
+    heat_df['day_of_week'] = pd.Categorical(heat_df['day_of_week'],
+                                            categories=weekday_order, ordered=True)
+    return monthly_sessions, dow_sessions, monthly_revenue, busiest_units, heat_df
 
 
 # --- UI ---
@@ -17,6 +41,7 @@ display_banner()
 with st.spinner('Loading parking data...'): 
     try:
         df = fetch_parking_vis_chatbot()
+        monthly_df, dow_df, rev_month_df, unit_counts, heat_df = summarize_parking(df)
     except Exception as e:
         st.error(f'Could not load parking data: {e}')
 
@@ -102,8 +127,6 @@ st.markdown('---')
 # --- Monthly Sessions Trend ---
 st.subheader('Monthly Parking Sessions Trend')
 
-monthly_df = df.groupby('month').size().reset_index(name='sessions')
-
 monthly_fig = px.line(
     monthly_df,
     x='month',
@@ -118,11 +141,6 @@ st.plotly_chart(monthly_fig, width='stretch')
 st.markdown('---')
 st.subheader('Day of Week Parking Trend (Overall)')
 
-weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-dow_df = df.groupby('day_of_week').size().reset_index(name='sessions')
-dow_df['day_of_week'] = pd.Categorical(dow_df['day_of_week'], categories=weekday_order, ordered=True)
-dow_df = dow_df.sort_values('day_of_week')
-
 dow_fig = px.bar(
     dow_df,
     x='day_of_week',
@@ -135,15 +153,6 @@ st.plotly_chart(dow_fig, width='stretch')
 # --- Monthly Revenue Trend ---
 st.markdown('---')
 st.subheader('Monthly Revenue Trend (Overall)')
-
-month_order = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-]
-
-rev_month_df = df.groupby('month')['Amount'].sum().reset_index()
-rev_month_df['month'] = pd.Categorical(rev_month_df['month'], categories=month_order, ordered=True)
-rev_month_df = rev_month_df.sort_values('month')
 
 rev_month_fig = px.line(
     rev_month_df,
@@ -158,13 +167,6 @@ st.plotly_chart(rev_month_fig, width='stretch')
 # --- Busiest Units (Overall) ---
 st.markdown('---')
 st.subheader('Top Busiest Parking Units (Overall)')
-
-unit_counts = (
-    df['Unit']
-    .value_counts()
-    .reset_index(name='count')
-    .rename(columns={'index': 'Unit'})
-)
 
 unit_fig = px.bar(
     unit_counts,
@@ -193,7 +195,7 @@ st.plotly_chart(payment_fig, width='stretch')
 st.markdown('---')
 st.subheader('Duration Distribution (Filtered Data)')
 
-dur_df = df_filtered[df_filtered['duration'] != 'NO'].copy()
+dur_df = df_filtered.loc[df_filtered['duration'] != 'NO', ['duration']].copy()
 dur_df['duration'] = dur_df['duration'].astype(float)
 
 duration_fig = px.histogram(
@@ -210,12 +212,8 @@ st.plotly_chart(duration_fig, width='stretch')
 st.markdown('---')
 st.subheader('Hour × Day-of-Week Parking Intensity Heatmap (Overall)')
 
-heat_df = df[df['duration'] != 'NO'].copy()
-heat_df['duration'] = heat_df['duration'].astype(float)
-
-pivot_df = heat_df.groupby(['day_of_week', 'hour']).size().reset_index(name='sessions')
-pivot_df['day_of_week'] = pd.Categorical(pivot_df['day_of_week'], categories=weekday_order, ordered=True)
-pivot_table = pivot_df.pivot(index='day_of_week', columns='hour', values='sessions').fillna(0)
+pivot_table = heat_df.pivot(index="day_of_week", columns="hour",
+                            values="sessions").fillna(0)
 
 heatmap_fig = px.imshow(
     pivot_table,

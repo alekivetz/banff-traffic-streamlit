@@ -1,17 +1,10 @@
 import streamlit as st
 import pandas as pd
-import joblib
-import io
-import json
 from datetime import datetime
-import xgboost as xgb
-import shap
-import matplotlib.pyplot as plt
-import numpy as np
 
 from utils.display_images import display_image, display_banner
 from utils.route_info import ROUTE_DESCRIPTIONS
-from utils.data_loader import fetch_routes_data, fetch_classifier, fetch_regressors
+from utils.data_loader import fetch_routes_data, fetch_classifier, fetch_single_regressor
 
 
 # --- UI Setup ---
@@ -23,7 +16,6 @@ with st.spinner('Loading route data and models...'):
     try:
         df = fetch_routes_data(for_models=True)
         clf = fetch_classifier()
-        regressors = fetch_regressors()
     except Exception as e:
         st.error(f'Could not load route data and models: {e}')
 
@@ -113,10 +105,10 @@ if st.button('Predict Delay'):
             st.error('No available past data for this route and time.')
         else:
             closest_row = route_df.iloc[-1]
-            regressor = regressors.get(route)
-
-            if regressor is None:
-                st.error(f'No trained model found for {route}.')
+            try: 
+                regressor = fetch_single_regressor(route)
+            except Exception as e:
+                st.error(f'Could not load model for {route}: {e}')
             else:
                 feature_names = getattr(regressor, 'feature_names_in_', None)
                 if feature_names is None:
@@ -126,6 +118,7 @@ if st.button('Predict Delay'):
                 pred = regressor.predict(X_new)[0]
 
                 st.success(f'Predicted Delay: {pred:.2f} minutes')
+
 
 
 st.markdown('---')

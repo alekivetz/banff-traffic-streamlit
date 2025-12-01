@@ -9,7 +9,8 @@ def display_image(file_name):
     return Image.open(os.path.join(asset_dir, file_name))
 
 
-def display_banner():
+@st.cache_resource
+def load_banner():
     script_dir = os.path.dirname(__file__)
     banner_path = os.path.join(script_dir, '../assets/banner.png')
 
@@ -22,5 +23,8 @@ def display_banner():
 
     banner_resized = banner.resize((target_width, target_height))
 
-    # Display banner
-    st.image(banner_resized, width='stretch')
+    return banner_resized
+
+def display_banner():
+    banner = load_banner()
+    st.image(banner, width='stretch')
