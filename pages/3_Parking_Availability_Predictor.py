@@ -26,7 +26,8 @@ st.write('Select a parking lot to view its predicted occupancy 60 minutes ahead.
 st.markdown('---')  
 
 # --- Select Parking Lot ---
-units = sorted(features_df['unit'].unique())    
+
+units = sorted([u for u in features_df['unit'].unique() if pd.notna(u)])
 selected_unit = st.selectbox('Select Parking Lot', units)
 
 unit_data = features_df[features_df['unit'] == selected_unit].copy()
