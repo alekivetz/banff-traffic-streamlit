@@ -250,7 +250,7 @@ def handle_parking_query(q):
         if filtered.empty:
             return f'No parking sessions found on {date_str}.'
         avg = filtered['duration'].mean()
-        return f'On {date_str}, {len(filtered)} sessions had an average duration of {avg:.2f} hours.'
+        return f'On {date_str}, the average parking duration was {avg:.2f} hours.'
 
     # Average duration for specific unit
     match = re.search(r'(banff\d+)', q_lower)
@@ -271,7 +271,7 @@ def handle_parking_query(q):
         row = grouped.loc[grouped['mean'].idxmax()]
         return (
             f'The parking lot with the longest average duration is **{row["Unit"]}**, '
-            f'with {int(row["count"])} sessions and an average stay of {row["mean"]:.2f} hours.'
+            f'with an average stay of {row["mean"]:.2f} hours.'
         )
     
     # Overall average parking duration - no date or unit
@@ -279,7 +279,7 @@ def handle_parking_query(q):
         avg = df['duration'].mean()
         total = len(df)
         return (
-            f'The overall average parking duration across all {total:,} sessions '
+            f'The overall average parking duration across all sessions '
             f'is {avg:.2f} hours.'
         )
     return None  # No match found
