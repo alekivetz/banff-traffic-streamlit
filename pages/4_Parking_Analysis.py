@@ -10,9 +10,9 @@ from utils.data_loader import fetch_parking_vis_chatbot
 @st.cache_data(ttl=3600)
 def summarize_parking(df: pd.DataFrame):
     """Return pre-aggregated summaries to speed up Plotly charts."""
-    weekday_order = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-    month_order = ['January','February','March','April','May','June','July',
-                   'August','September','October','November','December']
+    weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    month_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                   'August', 'September', 'October', 'November', 'December']
 
     monthly_sessions = df.groupby('month').size().reset_index(name='sessions')
     dow_sessions = df.groupby('day_of_week').size().reset_index(name='sessions')
@@ -26,7 +26,7 @@ def summarize_parking(df: pd.DataFrame):
                      .rename(columns={'index': 'Unit'}))
     pivot_df = df[df['duration'] != 'NO'].copy()
     pivot_df['duration'] = pivot_df['duration'].astype(float)
-    heat_df = (pivot_df.groupby(['day_of_week','hour']).size()
+    heat_df = (pivot_df.groupby(['day_of_week', 'hour']).size()
                .reset_index(name='sessions'))
     heat_df['day_of_week'] = pd.Categorical(heat_df['day_of_week'],
                                             categories=weekday_order, ordered=True)
@@ -105,6 +105,7 @@ if type_search:
         df_filtered['Type'].str.contains(type_search, case=False, na=False)
     ]
 
+
 # --- Top KPIs ---
 st.markdown('---')
 st.subheader('Key Performance Indicators')
@@ -112,17 +113,17 @@ st.subheader('Key Performance Indicators')
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric('Total Sessions', f'{len(df_filtered):,}')
+    st.metric('Total Sessions', len(df_filtered))
 
 with col2:
-    st.metric('Total Revenue ($)', f'{df_filtered["Amount"].sum():,.2f}')
+    st.metric('Total Revenue ($)', df_filtered['Amount'].sum())
 
 with col3:
-    dur = df_filtered[df_filtered['duration'] != 'NO']['duration'].astype(float)
-    avg_dur = round(dur.mean(), 2) if len(dur) > 0 else 0
-    st.metric('Avg Duration (min)', avg_dur)
+    dur = pd.to_numeric(df_filtered['duration'], errors='coerce')
+    st.metric('Avg Duration (min)', round(dur.mean(), 2) if len(dur) > 0 else 0)
 
 st.markdown('---')
+
 
 # --- Monthly Sessions Trend ---
 st.subheader('Monthly Parking Sessions Trend')
@@ -134,8 +135,8 @@ monthly_fig = px.line(
     title='Monthly Parking Sessions (Total Count)',
     markers=True
 )
-
 st.plotly_chart(monthly_fig, width='stretch')
+
 
 # --- Day of Week Trend ---
 st.markdown('---')
@@ -147,8 +148,8 @@ dow_fig = px.bar(
     y='sessions',
     title='Parking Sessions by Day of Week (Overall)'
 )
-
 st.plotly_chart(dow_fig, width='stretch')
+
 
 # --- Monthly Revenue Trend ---
 st.markdown('---')
@@ -161,8 +162,8 @@ rev_month_fig = px.line(
     title='Total Revenue by Month ($)',
     markers=True
 )
-
 st.plotly_chart(rev_month_fig, width='stretch')
+
 
 # --- Busiest Units (Overall) ---
 st.markdown('---')
@@ -175,45 +176,41 @@ unit_fig = px.bar(
     title='Top Busiest Parking Units',
     labels={'Unit': 'Parking Lot', 'count': 'Sessions'}
 )
-
 st.plotly_chart(unit_fig, width='stretch')
+
 
 # --- Payment Type Distribution ---
 st.markdown('---')
 st.subheader('Payment Type Distribution (Overall)')
 
 payment_fig = px.pie(
-    df,
+    df[df['Payment type'].notna()],
     names='Payment type',
-    title='Payment Method Breakdown (All Data)',
+    title='Payment Method Breakdown (Non-Null Only)',
     hole=0.4
 )
-
 st.plotly_chart(payment_fig, width='stretch')
+
 
 # --- Duration Distribution ---
 st.markdown('---')
 st.subheader('Duration Distribution (Filtered Data)')
 
-dur_df = df_filtered.loc[df_filtered['duration'] != 'NO', ['duration']].copy()
-dur_df['duration'] = dur_df['duration'].astype(float)
+dur_df = pd.to_numeric(df_filtered.loc[df_filtered['duration'] != 'NO', 'duration'], errors='coerce').dropna()
 
 duration_fig = px.histogram(
     dur_df,
-    x='duration',
     nbins=50,
-    title='Distribution of Parking Duration (Minutes)',
-    color_discrete_sequence=['#0072B2']
+    title='Distribution of Parking Duration (Minutes)'
 )
-
 st.plotly_chart(duration_fig, width='stretch')
+
 
 # --- Hour × Day-of-Week Heatmap ---
 st.markdown('---')
 st.subheader('Hour × Day-of-Week Parking Intensity Heatmap (Overall)')
 
-pivot_table = heat_df.pivot(index="day_of_week", columns="hour",
-                            values="sessions").fillna(0)
+pivot_table = heat_df.pivot(index='day_of_week', columns='hour', values='sessions').fillna(0)
 
 heatmap_fig = px.imshow(
     pivot_table,
@@ -222,8 +219,8 @@ heatmap_fig = px.imshow(
     aspect='auto',
     color_continuous_scale='Blues'
 )
-
 st.plotly_chart(heatmap_fig, width='stretch')
+
 
 # --- Footer ---
 st.markdown('---')
