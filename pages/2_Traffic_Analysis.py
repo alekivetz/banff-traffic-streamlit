@@ -60,13 +60,22 @@ with f3:
 
 st.markdown('---')
 
-# --- Normalize date range selection ---
-if isinstance(selected_dates, tuple) or isinstance(selected_dates, list):
-    start_date, end_date = selected_dates
+# --- Normalize date selection safely ---
+if isinstance(selected_dates, (list, tuple)):
+    if len(selected_dates) == 2:
+        start_date, end_date = selected_dates
+    elif len(selected_dates) == 1:
+        start_date = end_date = selected_dates[0]
+    else:
+        start_date, end_date = min_date, max_date
 else:
-    # If only one date is selected, use it as both start and end
-    start_date = end_date = selected_dates
+    start_date, end_date = min_date, max_date
 
+# --- Guard against partial selection (only start date clicked) ---
+if len(selected_dates) < 2:
+    st.warning('Please select both a start and end date to view filtered data.')
+    st.stop()
+    
 # --- Apply Filters ---
 filtered_df = df[
     (df['timestamp'].dt.date >= selected_dates[0]) &
