@@ -60,6 +60,13 @@ with f3:
 
 st.markdown('---')
 
+# --- Normalize date range selection ---
+if isinstance(selected_dates, tuple) or isinstance(selected_dates, list):
+    start_date, end_date = selected_dates
+else:
+    # If only one date is selected, use it as both start and end
+    start_date = end_date = selected_dates
+
 # --- Apply Filters ---
 filtered_df = df[
     (df['timestamp'].dt.date >= selected_dates[0]) &
