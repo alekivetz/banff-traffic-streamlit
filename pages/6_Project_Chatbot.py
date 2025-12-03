@@ -260,7 +260,7 @@ def handle_parking_query(q):
         filtered = df[mask]
         if filtered.empty:
             return f'No sessions found for unit matching "{key}".'
-        avg = filtered['duration'].mean()
+        avg = filtered['duration'].mean() / 60
         unit_name = filtered['Unit'].iloc[0]
         return f'{unit_name} has {len(filtered)} sessions with an average duration of {avg:.2f} hours.'
 
@@ -278,7 +278,7 @@ def handle_parking_query(q):
     
     # Overall average parking duration - no date or unit
     if 'average' in q_lower and 'duration' in q_lower:
-        avg = df['duration'].mean()
+        avg = df['duration'].mean() / 60
         total = len(df)
         return (
             f'The overall average parking duration across all sessions '
