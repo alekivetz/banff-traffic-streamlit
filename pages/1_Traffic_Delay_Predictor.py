@@ -116,9 +116,9 @@ if st.button('Predict Delay'):
 
                 X_new = pd.DataFrame([closest_row]).reindex(columns=feature_names, fill_value=0)
                 pred = regressor.predict(X_new)[0]
-
+                if pred < 0:
+                    pred = 0
                 st.success(f'Predicted Delay: {pred:.2f} minutes')
-
 
 
 st.markdown('---')
