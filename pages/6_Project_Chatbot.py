@@ -67,9 +67,9 @@ Insights from this analysis help identify high-demand periods, optimize parking 
 model_performance = """
 **Traffic Forecasting**\n
 Per-route Random Forest regressors achieved:
-• **R²:** 0.88    
-• **MAE:** 0.015 minutes  
-• **RMSE:** 0.495 minutes  
+• **R²:** 0.862
+• **MAE:** 0.023 minutes  
+• **RMSE:** 0.536 minutes  
 
 ---
 
@@ -90,7 +90,7 @@ An XGBoost regression model predicted parking occupancy and duration.
 
 **Results:**  
 • **R²:** 0.95  
-• **MAE:** 0.97 hours   
+• **MAE:** 0.97   
 """
 
 

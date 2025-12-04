@@ -50,9 +50,9 @@ st.markdown("""
 Per-route **Random Forest regressors** forecast continuous travel delays using time-based, spatial, and lagged traffic features.
 
 **Average performance:**
-- R²: 0.88  
-- MAE: 0.015 minutes  
-- RMSE: 0.495 minutes  
+- R²: 0.862 
+- MAE: 0.023 minutes  
+- RMSE: 0.536 minutes  
 """)
 
 col1, col2 = st.columns([2, 1])
@@ -76,7 +76,7 @@ An **XGBoost regressor** predicts parking occupancy and duration based on hourly
 
 **Performance:**
 - R²: 0.95  
-- MAE: 0.969 hours  
+- MAE: 0.969   
 """)
 
 col1, col2 = st.columns([2, 1])
