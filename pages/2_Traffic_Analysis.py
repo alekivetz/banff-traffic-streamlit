@@ -21,44 +21,38 @@ with st.spinner('Loading route data...'):
 
 st.title('Banff Traffic Congestion Analysis')
 st.write('This interactive dashboard visualizes historical traffic data to uncover delay patterns, peak-hour behavior, and route performance within the town of Banff.')
-
-# --- Top Controls: Parameters & Filters ---
 st.markdown('---')
-st.subheader('Simulation Parameters and Filters')
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    base_speed_kmh = st.slider('Base Speed (km/h)', 30, 100, 60, 5)
-with col2:
-    rush_hour_slowdown = st.slider('Rush Hour Slowdown (%)', 10, 90, 50, 5)
-with col3:
-    weekend_speedup = st.slider('Weekend Speed Increase (%)', 0, 30, 10, 5)
-with col4:
-    base_delay = st.slider('Base Delay (minutes)', 0, 20, 5, 1)
+filters, visuals = st.columns([1, 5])
 
-st.markdown('')
-
-f1, f2, f3 = st.columns([1.3, 1, 0.6])
-with f1:
-    st.markdown('**Select Date Range**')
-    min_date = datetime(2024, 12, 1).date()
-    max_date = datetime(2025, 9, 7).date()
-    selected_dates = st.date_input('Select Date Range', value=[min_date, max_date],
-                                   min_value=min_date, max_value=max_date,
-                                   label_visibility='collapsed')
-with f2:
+# --- Left Controls: Parameters & Filters ---
+with filters:
+    st.subheader('Dashboard Filters')
+    
     st.markdown('**Select Routes**')
     available_routes = ['Route 1','Route 2','Route 3','Route 4','Route 5','Route 6',
                         'Route 7','Route 8','Route 10','Route 11','Route 12','Route 13']
     selected_routes = st.multiselect('Select Routes', options=available_routes,
-                                     default=available_routes[:3],
+                                     default=available_routes[:1],
                                      label_visibility='collapsed')
-with f3:
-    st.write('')
+    
+    st.markdown('**Select Date Range**')
+    min_date = datetime(2024, 12, 1).date()
+    max_date = datetime(2025, 9, 7).date()
+    selected_dates = st.date_input('Select Date Range', value=[min_date, max_date],
+                                    min_value=min_date, max_value=max_date,
+                                    label_visibility='collapsed')
+
+    st.markdown('**Select Hour Range**')
+    selected_hours = st.slider("Select Hour Range", 0, 23, (0, 24))
+
+    st.markdown('**Select Days of Week**')
+    days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    selected_days = st.multiselect("Select Days of Week", days, default=days)
+
     if st.button('Reset All'):
         st.rerun()
 
-st.markdown('---')
 
 # --- Normalize date selection safely ---
 if isinstance(selected_dates, (list, tuple)):
@@ -80,64 +74,59 @@ if len(selected_dates) < 2:
 filtered_df = df[
     (df['timestamp'].dt.date >= selected_dates[0]) &
     (df['timestamp'].dt.date <= selected_dates[1]) &
-    (df['route'].isin(selected_routes))
+    (df['route'].isin(selected_routes)) &
+    (df['hour'] >= selected_hours[0]) &
+    (df['hour'] <= selected_hours[1]) &
+    (df['day_of_week'].isin(selected_days))
 ]
+with visuals:
+    v1, v2 = st.columns(2)
+    v3, v4 = st.columns(2)
+    with v1: 
+        # --- Daily Delay Trends ---
+        fig1 = px.line(filtered_df.groupby(['route', pd.Grouper(key='timestamp', freq='D')])['actual_delay'].mean().reset_index(),
+                    x='timestamp', y='actual_delay', color='route',
+                    title='Average Daily Delay by Route',
+                    labels={'timestamp': 'Date', 'actual_delay': 'Average Delay (minutes)'})
+        fig1.update_layout(height=300)
+        st.plotly_chart(fig1, width='stretch')
+        st.caption('Shows how daily delays change over time for each route. Sharp increases highlight peak congestion periods or traffic incidents.')
 
-# --- 1. Average Speed by Route and Hour ---
-st.subheader('1. Average Speed by Route and Hour of Day')
-heatmap_data = filtered_df.pivot_table(index='route', columns='hour', values='speed_kmh', aggfunc='mean')
-fig1 = px.imshow(heatmap_data, labels=dict(x='Hour of Day', y='Route', color='speed_kmh'),
-                 x=heatmap_data.columns, y=heatmap_data.index, aspect='auto',
-                 color_continuous_scale='RdYlGn_r', title='Average Speed by Route and Hour of Day')
-fig1.update_xaxes(side='bottom')
-st.plotly_chart(fig1, width='stretch')
+    with v2:
+    # --- Delay Distribution by Day ---
+        weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        filtered_df.loc[:, 'day_of_week'] = pd.Categorical(filtered_df['day_of_week'], categories=weekday_order, ordered=True)
+        fig2 = px.box(filtered_df, x='day_of_week', y='actual_delay', color='day_of_week',
+                    title='Delay Distribution by Day of Week',
+                    category_orders={'day_of_week': weekday_order},
+                    labels={'day_of_week': 'Day of Week', 'actual_delay': 'Delay (minutes)'})
+        fig2.update_layout(showlegend=False, height=300)
+        st.plotly_chart(fig2, width='stretch')
+        st.caption('Compares delays across the week. Weekends typically show higher variability, reflecting heavier visitor traffic.')
 
-st.markdown('---')
+    # st.markdown('---')
 
-# --- 2. Daily Delay Trends ---
-st.subheader('2. Daily Delay Trends by Route')
-fig2 = px.line(filtered_df.groupby(['route', pd.Grouper(key='timestamp', freq='D')])['actual_delay'].mean().reset_index(),
-               x='timestamp', y='actual_delay', color='route',
-               title='Average Daily Delay by Route',
-               labels={'timestamp': 'Date', 'actual_delay': 'Average Delay (minutes)'})
-st.plotly_chart(fig2, width='stretch')
+    with v3:
+    # --- Speed vs Delay ---
+        sample_df = filtered_df.sample(min(1000, len(filtered_df)), random_state=42)
+        fig3 = px.scatter(sample_df, x='speed_kmh', y='actual_delay', color='route',
+                        title='Speed vs. Delay by Route', trendline='lowess',
+                        labels={'speed_kmh': 'speed_kmh', 'actual_delay': 'Delay (minutes)'},
+                        hover_data=['timestamp'])
+        fig3.update_layout(height=300)
+        st.plotly_chart(fig3, width='stretch')
+        st.caption('Illustrates the relationship between traffic speed and delay. Lower speeds usually correspond with longer delays, especially during busy times.')
 
-st.markdown('---')
-
-# --- 3. Delay Distribution by Day ---
-st.subheader('3. Delay Distribution by Day of Week')
-weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-filtered_df.loc[:, 'day_of_week'] = pd.Categorical(filtered_df['day_of_week'], categories=weekday_order, ordered=True)
-fig3 = px.box(filtered_df, x='day_of_week', y='actual_delay', color='day_of_week',
-              title='Delay Distribution by Day of Week',
-              category_orders={'day_of_week': weekday_order},
-              labels={'day_of_week': 'Day of Week', 'actual_delay': 'Delay (minutes)'})
-fig3.update_layout(showlegend=False)
-st.plotly_chart(fig3, width='stretch')
-
-st.markdown('---')
-
-# --- 4. Speed vs Delay ---
-st.subheader('4. Speed vs. Delay Relationship')
-sample_df = filtered_df.sample(min(1000, len(filtered_df)), random_state=42)
-fig4 = px.scatter(sample_df, x='speed_kmh', y='actual_delay', color='route',
-                  title='Speed vs. Delay by Route', trendline='lowess',
-                  labels={'speed_kmh': 'speed_kmh', 'actual_delay': 'Delay (minutes)'},
-                  hover_data=['timestamp'])
-st.plotly_chart(fig4, width='stretch')
-
-st.markdown('---')
-
-# --- 5. Monthly Delay Trends ---
-st.subheader('5. Monthly Delay Trends')
-month_order = ['January', 'February', 'March', 'April', 'May', 'June',
-               'July', 'August', 'September', 'October', 'November', 'December']
-filtered_df.loc[:, 'month'] = pd.Categorical(filtered_df['month'], categories=month_order, ordered=True)
-monthly_avg = filtered_df.groupby(['month', 'route'], observed=False)['actual_delay'].mean().reset_index()
-fig5 = px.bar(monthly_avg, x='month', y='actual_delay', color='route', barmode='group',
-              title='Average Monthly Delay by Route',
-              labels={'month': 'Month', 'actual_delay': 'Average Delay (minutes)'})
-st.plotly_chart(fig5, width='stretch')
+    # --- Average Speed by Route and Hour ---
+    with v4:
+        heatmap_data = filtered_df.pivot_table(index='route', columns='hour', values='speed_kmh', aggfunc='mean')
+        fig4 = px.imshow(heatmap_data, labels=dict(x='Hour of Day', y='Route', color='speed_kmh'),
+                        x=heatmap_data.columns, y=heatmap_data.index, aspect='auto',
+                        color_continuous_scale='RdYlGn_r', title='Average Speed by Route and Hour of Day')
+        fig4.update_xaxes(side='bottom')
+        fig4.update_layout(height=300)
+        st.plotly_chart(fig4, width='stretch')
+        st.caption('Shows how traffic speed changes through the day for each route. Red areas indicate faster movement, while green areas mark slower speeds that appear during mid-day congestion.')
 
 # --- Footer ---
 st.markdown('---')
